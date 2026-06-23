@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カロリー計算 - プロトタイプ</title>
+<style>
+  :root{
+    --bg:#FAF7F0;
+    --ink:#1B1B16;
+    --line:#DAD3C0;
+    --card:#FFFFFF;
+    --protein:#C0392B;
+    --fat:#D4A017;
+    --carb:#5B7F5B;
+    --muted:#8A8373;
+    --good:#5B7F5B;
+    --warn:#D4A017;
+    --bad:#C0392B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    padding:20px;
+  }
+  .app{
+    max-width:960px;
+    margin:0 auto;
+  }
+  h1{
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:0.02em;
+    margin:0 0 4px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 18px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  @media(min-width:760px){
+    .grid{grid-template-columns: 1.05fr 1fr;}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+  }
+  .card h2{
+    font-size:14px;
+    font-weight:700;
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  /* mode + target settings */
+  .mode-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .mode-btn{
+    flex:1;
+    padding:10px 8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .mode-btn.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+  .target-card{margin-bottom:18px;}
+  .target-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap:8px;
+  }
+  .target-grid .full{grid-column: 1 / -1;}
+  .target-field label.small{
+    display:block;
+    font-size:10.5px;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .pct-sum-note{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .pct-sum-note.bad{color:var(--bad); font-weight:700;}
+
+  .food-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:9px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    gap:8px;
+  }
+  .cat-header{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.06em;
+    color:#fff;
+    background:var(--ink);
+    padding:4px 8px;
+    border-radius:4px;
+    margin:14px 0 4px;
+    display:inline-block;
+  }
+  .cat-header:first-child{margin-top:0;}
+  .food-row:last-child{border-bottom:none;}
+  .food-name{font-weight:600;}
+  .food-meta{color:var(--muted); font-size:12px;}
+  .btn{
+    border:none;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    background:var(--ink);
+    color:#fff;
+  }
+  .btn:hover{opacity:0.85;}
+  .btn-ghost{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--line);
+  }
+  .btn-del{
+    background:transparent;
+    color:#B33;
+    font-size:16px;
+    padding:0 6px;
+    line-height:1;
+  }
+  .add-form{
+    margin-top:10px;
+    border-top:1px dashed var(--line);
+    padding-top:10px;
+    display:none;
+  }
+  .add-form.open{display:block;}
+  .add-form .row{
+    display:grid;
+    grid-template-columns: 1fr 70px;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .add-form .row3{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .add-form .row4{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  input, select{
+    width:100%;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:13px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus, select:focus{outline:2px solid var(--ink); outline-offset:1px;}
+  label.small{
+    display:block;
+    font-size:10.5px;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .meal-empty{
+    color:var(--muted);
+    font-size:13px;
+    text-align:center;
+    padding:18px 0;
+  }
+  .meal-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .meal-row:last-child{border-bottom:none;}
+  .meal-row .name{flex:1; font-size:13.5px; font-weight:600;}
+  .meal-row .qty-wrap{
+    display:flex; align-items:center; gap:4px;
+  }
+  .meal-row input[type=number]{
+    width:54px;
+    text-align:right;
+    padding:5px 6px;
+  }
+  .meal-row .unit{font-size:12px; color:var(--muted);}
+
+  .log-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .log-row:last-child{border-bottom:none;}
+  .log-row .l-label{font-weight:700;}
+  .log-row .l-kcal{color:var(--muted); font-family:"Courier New",monospace;}
+  .log-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  /* --- Nutrition Facts label --- */
+  .label-box{
+    border:3px solid var(--ink);
+    padding:14px 16px;
+    background:#fff;
+  }
+  .label-title{
+    font-size:16px;
+    font-weight:800;
+    border-bottom:8px solid var(--ink);
+    padding-bottom:6px;
+    margin-bottom:6px;
+  }
+  .label-kcal-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    border-bottom:4px solid var(--ink);
+    padding:6px 0 2px;
+  }
+  .label-kcal-row .lk-label{font-size:14px; font-weight:700;}
+  .label-kcal-row .lk-value{
+    font-family:"Arial Black", Impact, sans-serif;
+    font-size:30px;
+    font-weight:900;
+  }
+  .remain-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:11.5px;
+    color:var(--muted);
+    padding:4px 0 8px;
+    border-bottom:4px solid var(--ink);
+    font-family:"Courier New",monospace;
+  }
+  .remain-row.over{color:var(--bad); font-weight:700;}
+  .macro-line{
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .macro-line:last-child{border-bottom:none;}
+  .macro-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    margin-bottom:5px;
+  }
+  .macro-top .mname{font-weight:700;}
+  .macro-top .mgrams{font-family:"Courier New",monospace; color:var(--muted);}
+  .bar-bg{
+    height:8px;
+    border-radius:4px;
+    background:#EFEAE0;
+    overflow:hidden;
+  }
+  .bar-fill{height:100%; border-radius:4px;}
+  .pct-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:11.5px;
+    margin-top:3px;
+    font-family:"Courier New",monospace;
+  }
+  .pct-row .actual{color:var(--muted);}
+  .pct-row .target-diff{font-weight:700;}
+  .subcarb{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+    padding-left:2px;
+  }
+  .footnote{
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:10px;
+    line-height:1.5;
+  }
+  .reset-link{
+    display:inline-block;
+    margin-top:10px;
+    font-size:12px;
+    color:var(--muted);
+    text-decoration:underline;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>カロリー計算プロトタイプ</h1>
+  <p class="sub">食品を選んで個数・量を入れると、合計カロリーとPFC比率、目標との差分が出ます</p>
+
+  <!-- モード切り替え -->
+  <div class="mode-row">
+    <button class="mode-btn active" id="modeBtnNormal" onclick="switchMode('normal')">通常モード</button>
+    <button class="mode-btn" id="modeBtnFasting" onclick="switchMode('fasting')">プチ断食モード</button>
+  </div>
+
+  <!-- 目標設定 -->
+  <div class="card target-card">
+    <h2 id="targetTitle">目標設定（通常モード）</h2>
+    <div class="target-grid">
+      <div class="target-field">
+        <label class="small">目標カロリー(kcal)</label>
+        <input id="targetKcal" type="number" step="10" onchange="updateTarget('kcal', this.value)">
+      </div>
+      <div class="target-field">
+        <label class="small">タンパク質(%)</label>
+        <input id="targetP" type="number" step="1" onchange="updateTarget('p', this.value)">
+      </div>
+      <div class="target-field">
+        <label class="small">脂質(%)</label>
+        <input id="targetF" type="number" step="1" onchange="updateTarget('f', this.value)">
+      </div>
+      <div class="target-field">
+        <label class="small">炭水化物(%)</label>
+        <input id="targetC" type="number" step="1" onchange="updateTarget('c', this.value)">
+      </div>
+    </div>
+    <div class="pct-sum-note" id="pctSumNote"></div>
+  </div>
+
+  <div class="grid">
+    <!-- 食品ライブラリ -->
+    <div class="card">
+      <h2>食品ライブラリ <button class="btn btn-ghost" onclick="toggleAddForm()">+ 食品を追加</button></h2>
+      <div id="foodList"></div>
+
+      <div class="add-form" id="addForm">
+        <div class="row">
+          <div>
+            <label class="small">食品名</label>
+            <input id="newName" placeholder="例：オートミール">
+          </div>
+          <div>
+            <label class="small">単位</label>
+            <input id="newUnit" placeholder="例：1杯 / 100g">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="small">カテゴリ</label>
+            <select id="newCat">
+              <option value="主食">主食</option>
+              <option value="肉類">肉類</option>
+              <option value="魚類">魚類</option>
+              <option value="卵">卵</option>
+              <option value="大豆・乳製品">大豆・乳製品</option>
+              <option value="豆類">豆類</option>
+              <option value="野菜">野菜</option>
+              <option value="果物">果物</option>
+              <option value="油脂">油脂</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <div></div>
+        </div>
+        <div class="row4">
+          <div>
+            <label class="small">カロリー(kcal)</label>
+            <input id="newKcal" type="number" step="0.1">
+          </div>
+          <div>
+            <label class="small">P(g)</label>
+            <input id="newP" type="number" step="0.1">
+          </div>
+          <div>
+            <label class="small">F(g)</label>
+            <input id="newF" type="number" step="0.1">
+          </div>
+          <div>
+            <label class="small">C(g)</label>
+            <input id="newC" type="number" step="0.1">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="small">食物繊維(g) ※任意</label>
+            <input id="newFb" type="number" step="0.1">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn" style="width:100%" onclick="addFood()">追加する</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 今回の食事 + 今日の記録 + 栄養成分表示 -->
+    <div>
+      <div class="card" style="margin-bottom:18px;">
+        <h2>今回の食事</h2>
+        <div id="mealList"></div>
+        <div class="log-actions">
+          <button class="btn" onclick="logMeal()">この食事を記録に追加</button>
+          <span class="reset-link" onclick="resetMeal()">この食事をクリア</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h2>今日の記録</h2>
+        <div id="logList"></div>
+        <span class="reset-link" onclick="resetDay()">今日の記録を全てリセット</span>
+      </div>
+
+      <div class="label-box">
+        <div class="label-title">栄養成分表示（本日合計）</div>
+        <div class="label-kcal-row">
+          <span class="lk-label">カロリー合計</span>
+          <span class="lk-value" id="totalKcal">0</span>
+          <span class="lk-label">kcal</span>
+        </div>
+        <div class="remain-row" id="remainKcalRow">目標まであと 0kcal</div>
+
+        <div class="macro-line">
+          <div class="macro-top">
+            <span class="mname" style="color:var(--protein)">タンパク質</span>
+            <span class="mgrams" id="proteinG">0.0 g</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="proteinBar" style="background:var(--protein); width:0%"></div></div>
+          <div class="pct-row">
+            <span class="actual" id="proteinPct">0%</span>
+            <span class="target-diff" id="proteinDiff"></span>
+          </div>
+          <div class="subcarb" id="proteinRemain"></div>
+        </div>
+
+        <div class="macro-line">
+          <div class="macro-top">
+            <span class="mname" style="color:var(--fat)">脂質</span>
+            <span class="mgrams" id="fatG">0.0 g</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="fatBar" style="background:var(--fat); width:0%"></div></div>
+          <div class="pct-row">
+            <span class="actual" id="fatPct">0%</span>
+            <span class="target-diff" id="fatDiff"></span>
+          </div>
+          <div class="subcarb" id="fatRemain"></div>
+        </div>
+
+        <div class="macro-line">
+          <div class="macro-top">
+            <span class="mname" style="color:var(--carb)">炭水化物</span>
+            <span class="mgrams" id="carbG">0.0 g</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="carbBar" style="background:var(--carb); width:0%"></div></div>
+          <div class="pct-row">
+            <span class="actual" id="carbPct">0%</span>
+            <span class="target-diff" id="carbDiff"></span>
+          </div>
+          <div class="subcarb" id="carbRemain"></div>
+          <div class="subcarb" id="netCarbRow"></div>
+        </div>
+
+        <div class="footnote">
+          ※ PFC比率はP×4kcal／F×9kcal／C×4kcalで計算したカロリー換算比です。糖質は炭水化物−食物繊維で算出した参考値です。下の食品データは仮の値なので、実際の食品成分表などに置き換えてご利用ください。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let foods = [
+  {id:1, name:"ご飯(白米)", unit:"1膳(150g)", kcal:252, p:3.8, f:0.5, c:55.7, fb:0.5, cat:"主食"},
+  {id:39, name:"ご飯(玄米)", unit:"1膳(150g)", kcal:228, p:4.2, f:1.5, c:53.4, fb:2.1, cat:"主食"},
+  {id:25, name:"ハードパン(ロール)", unit:"1個(50g)", kcal:140, p:4.8, f:0.7, c:28.8, fb:1.4, cat:"主食"},
+  {id:26, name:"パスタ(乾麺)", unit:"1食(80g)", kcal:278, p:10.3, f:1.4, c:57.0, fb:2.2, cat:"主食"},
+  {id:35, name:"そば(乾麺)", unit:"100g", kcal:344, p:14.0, f:2.3, c:63.0, fb:3.7, cat:"主食"},
+  {id:2, name:"卵", unit:"1個", kcal:71, p:6.1, f:4.8, c:0.2, fb:0, cat:"卵"},
+  {id:3, name:"鶏むね肉(皮なし)", unit:"100g", kcal:110, p:22.5, f:1.5, c:0, fb:0, cat:"肉類"},
+  {id:19, name:"豚肉(もも・赤身)", unit:"100g", kcal:138, p:20.5, f:5.3, c:0.2, fb:0, cat:"肉類"},
+  {id:27, name:"豚バラ肉", unit:"100g", kcal:386, p:14.2, f:35.4, c:0.1, fb:0, cat:"肉類"},
+  {id:28, name:"豚肉(ステーキ・ロース)", unit:"100g", kcal:263, p:19.3, f:19.2, c:0.2, fb:0, cat:"肉類"},
+  {id:20, name:"牛肉(もも・赤身)", unit:"100g", kcal:165, p:21.3, f:8.6, c:0.5, fb:0, cat:"肉類"},
+  {id:29, name:"牛バラ肉", unit:"100g", kcal:380, p:11.0, f:35.0, c:0.3, fb:0, cat:"肉類"},
+  {id:30, name:"牛肉(ステーキ用)", unit:"100g", kcal:298, p:16.5, f:23.7, c:0.4, fb:0, cat:"肉類"},
+  {id:21, name:"ラム肉", unit:"100g", kcal:198, p:20.0, f:13.6, c:0, fb:0, cat:"肉類"},
+  {id:15, name:"いわし", unit:"1尾(正味60g)", kcal:101, p:11.5, f:5.5, c:0.1, fb:0, cat:"魚類"},
+  {id:16, name:"あじ", unit:"1尾(正味70g)", kcal:88, p:13.8, f:3.2, c:0.1, fb:0, cat:"魚類"},
+  {id:17, name:"さば", unit:"1切れ(80g)", kcal:169, p:16.5, f:11.1, c:0.2, fb:0, cat:"魚類"},
+  {id:18, name:"ボイル魚(白身)", unit:"100g", kcal:77, p:17.6, f:0.2, c:0.1, fb:0, cat:"魚類"},
+  {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
+  {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
+  {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
+  {id:14, name:"納豆", unit:"1パック(45g)", kcal:85, p:7.4, f:4.5, c:5.4, fb:3.0, cat:"大豆・乳製品"},
+  {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"豆類"},
+  {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"豆類"},
+  {id:4, name:"ほうれん草", unit:"40g", kcal:8, p:0.9, f:0.2, c:1.2, fb:1.1, cat:"野菜"},
+  {id:8, name:"トマト", unit:"1/4個(約38g)", kcal:7, p:0.3, f:0.1, c:1.8, fb:0.4, cat:"野菜"},
+  {id:9, name:"プチトマト", unit:"1個(15g)", kcal:5, p:0.2, f:0.0, c:0.9, fb:0.2, cat:"野菜"},
+  {id:10, name:"きのこ(しめじ等)", unit:"40g", kcal:8, p:1.1, f:0.1, c:1.9, fb:1.4, cat:"野菜"},
+  {id:11, name:"ブロッコリー", unit:"40g", kcal:13, p:1.7, f:0.2, c:2.1, fb:1.8, cat:"野菜"},
+  {id:12, name:"カリフラワー", unit:"40g", kcal:11, p:1.2, f:0.0, c:2.1, fb:1.2, cat:"野菜"},
+  {id:22, name:"リンゴ", unit:"1/2個(約125g)", kcal:68, p:0.3, f:0.1, c:17.8, fb:2.4, cat:"果物"},
+  {id:23, name:"柑橘類(みかんなど)", unit:"1個(約80g)", kcal:39, p:0.6, f:0.1, c:9.6, fb:0.8, cat:"果物"},
+  {id:24, name:"キウイフルーツ", unit:"1/2個(約50g)", kcal:26, p:0.5, f:0.1, c:6.7, fb:1.3, cat:"果物"},
+  {id:32, name:"いちご", unit:"1/2パック(約125g)", kcal:39, p:1.1, f:0.1, c:10.6, fb:1.8, cat:"果物"},
+  {id:33, name:"すいか(大玉)", unit:"1/8個(約525g)", kcal:194, p:3.2, f:0.5, c:50.0, fb:1.6, cat:"果物"},
+  {id:34, name:"バナナ", unit:"1本(約100g)", kcal:86, p:1.1, f:0.2, c:22.5, fb:1.1, cat:"果物"},
+  {id:13, name:"オリーブオイル", unit:"大さじ1(13g)", kcal:125, p:0, f:13.6, c:0, fb:0, cat:"油脂"},
+  {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
+];
+let nextId = 40;
+const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","野菜","果物","油脂","その他"];
+
+let targets = {
+  fasting: {kcal:500, p:35, f:25, c:40},
+  normal:  {kcal:2000, p:30, f:30, c:40}
+};
+let mode = 'normal';
+
+let meal = []; // {foodId, qty}  -- 今回の食事（記録前）
+let dailyLog = []; // {id, label, kcal, p, f, c, fb} -- 記録済みの食事
+let logSeq = 1;
+
+function getStep(){
+  return mode === 'fasting' ? 0.1 : 0.5;
+}
+
+function switchMode(m){
+  mode = m;
+  document.getElementById('modeBtnNormal').classList.toggle('active', m==='normal');
+  document.getElementById('modeBtnFasting').classList.toggle('active', m==='fasting');
+  document.getElementById('targetTitle').textContent = '目標設定（' + (m==='normal' ? '通常モード' : 'プチ断食モード') + '）';
+  renderTargetInputs();
+  renderMeal(); // qty入力のstepを更新するため再描画
+  calcTotals();
+}
+
+function renderTargetInputs(){
+  const t = targets[mode];
+  document.getElementById('targetKcal').value = t.kcal;
+  document.getElementById('targetP').value = t.p;
+  document.getElementById('targetF').value = t.f;
+  document.getElementById('targetC').value = t.c;
+  checkPctSum();
+}
+
+function updateTarget(field, value){
+  const v = parseFloat(value);
+  targets[mode][field] = isNaN(v) ? 0 : v;
+  checkPctSum();
+  calcTotals();
+}
+
+function checkPctSum(){
+  const t = targets[mode];
+  const sum = (parseFloat(t.p)||0) + (parseFloat(t.f)||0) + (parseFloat(t.c)||0);
+  const note = document.getElementById('pctSumNote');
+  if(Math.abs(sum - 100) > 0.5){
+    note.textContent = '※ P+F+Cの合計が ' + sum.toFixed(0) + '% です（100%にすると目標グラム数が正確になります）';
+    note.classList.add('bad');
+  } else {
+    note.textContent = 'P+F+Cの合計：' + sum.toFixed(0) + '%';
+    note.classList.remove('bad');
+  }
+}
+
+function toggleAddForm(){
+  document.getElementById('addForm').classList.toggle('open');
+}
+
+function addFood(){
+  const name = document.getElementById('newName').value.trim();
+  const unit = document.getElementById('newUnit').value.trim() || "100g";
+  const cat = document.getElementById('newCat').value || "その他";
+  const kcal = parseFloat(document.getElementById('newKcal').value) || 0;
+  const p = parseFloat(document.getElementById('newP').value) || 0;
+  const f = parseFloat(document.getElementById('newF').value) || 0;
+  const c = parseFloat(document.getElementById('newC').value) || 0;
+  const fb = parseFloat(document.getElementById('newFb').value) || 0;
+  if(!name){ alert('食品名を入力してください'); return; }
+  foods.push({id:nextId++, name, unit, kcal, p, f, c, fb, cat});
+  document.getElementById('newName').value='';
+  document.getElementById('newUnit').value='';
+  document.getElementById('newKcal').value='';
+  document.getElementById('newP').value='';
+  document.getElementById('newF').value='';
+  document.getElementById('newC').value='';
+  document.getElementById('newFb').value='';
+  document.getElementById('addForm').classList.remove('open');
+  renderFoods();
+}
+
+function deleteFood(id){
+  const f = foods.find(x => x.id === id);
+  const name = f ? f.name : 'この食品';
+  if(!confirm('「' + name + '」を食品ライブラリから削除します。よろしいですか？')) return;
+  foods = foods.filter(f => f.id !== id);
+  meal = meal.filter(m => m.foodId !== id);
+  renderFoods();
+  renderMeal();
+}
+
+function addToMeal(foodId){
+  const existing = meal.find(m => m.foodId === foodId);
+  if(existing){
+    existing.qty += getStep();
+  } else {
+    meal.push({foodId, qty:1});
+  }
+  renderMeal();
+}
+
+function updateQty(foodId, value){
+  const v = parseFloat(value);
+  const item = meal.find(m => m.foodId === foodId);
+  if(item){
+    item.qty = isNaN(v) ? 0 : v;
+  }
+  renderMeal();
+}
+
+function removeFromMeal(foodId){
+  meal = meal.filter(m => m.foodId !== foodId);
+  renderMeal();
+}
+
+function resetMeal(){
+  meal = [];
+  renderMeal();
+}
+
+function mealTotals(){
+  let totals = {kcal:0, p:0, f:0, c:0, fb:0};
+  meal.forEach(m => {
+    const f = foods.find(x => x.id === m.foodId);
+    if(!f) return;
+    totals.kcal += f.kcal * m.qty;
+    totals.p += f.p * m.qty;
+    totals.f += f.f * m.qty;
+    totals.c += f.c * m.qty;
+    totals.fb += (f.fb||0) * m.qty;
+  });
+  return totals;
+}
+
+function logMeal(){
+  if(meal.length === 0) return;
+  const t = mealTotals();
+  dailyLog.push({
+    id: logSeq++,
+    label: '食事' + (dailyLog.length+1),
+    kcal: t.kcal, p:t.p, f:t.f, c:t.c, fb:t.fb
+  });
+  meal = [];
+  renderMeal();
+  renderLog();
+}
+
+function removeLogEntry(id){
+  dailyLog = dailyLog.filter(e => e.id !== id);
+  renderLog();
+}
+
+function resetDay(){
+  dailyLog = [];
+  renderLog();
+}
+
+function combinedTotals(){
+  let totals = mealTotals();
+  dailyLog.forEach(e => {
+    totals.kcal += e.kcal;
+    totals.p += e.p;
+    totals.f += e.f;
+    totals.c += e.c;
+    totals.fb += e.fb;
+  });
+  return totals;
+}
+
+function renderFoods(){
+  const el = document.getElementById('foodList');
+  if(foods.length === 0){
+    el.innerHTML = '<div class="meal-empty">食品がありません</div>';
+    return;
+  }
+  let html = '';
+  categoryOrder.forEach(cat => {
+    const items = foods.filter(f => f.cat === cat);
+    if(items.length === 0) return;
+    html += `<div class="cat-header">${escapeHtml(cat)}</div>`;
+    html += items.map(f => `
+      <div class="food-row">
+        <div>
+          <div class="food-name">${escapeHtml(f.name)}</div>
+          <div class="food-meta">${escapeHtml(f.unit)} ・ ${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
+        </div>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <button class="btn" onclick="addToMeal(${f.id})">追加</button>
+          <button class="btn-del" onclick="deleteFood(${f.id})" title="削除">×</button>
+        </div>
+      </div>
+    `).join('');
+  });
+  el.innerHTML = html;
+}
+
+function renderMeal(){
+  const el = document.getElementById('mealList');
+  const step = getStep();
+  if(meal.length === 0){
+    el.innerHTML = '<div class="meal-empty">まだ何も追加されていません<br>左の食品ライブラリから「追加」を押してください</div>';
+  } else {
+    el.innerHTML = meal.map(m => {
+      const f = foods.find(x => x.id === m.foodId);
+      if(!f) return '';
+      return `
+        <div class="meal-row">
+          <div class="name">${escapeHtml(f.name)}</div>
+          <div class="qty-wrap">
+            <input type="number" step="${step}" min="0" value="${m.qty}" onchange="updateQty(${f.id}, this.value)">
+            <span class="unit">${escapeHtml(f.unit)}</span>
+          </div>
+          <button class="btn-del" onclick="removeFromMeal(${f.id})" title="削除">×</button>
+        </div>
+      `;
+    }).join('');
+  }
+  calcTotals();
+}
+
+function renderLog(){
+  const el = document.getElementById('logList');
+  if(dailyLog.length === 0){
+    el.innerHTML = '<div class="meal-empty">まだ記録がありません</div>';
+  } else {
+    el.innerHTML = dailyLog.map(e => `
+      <div class="log-row">
+        <span class="l-label">${escapeHtml(e.label)}</span>
+        <span class="l-kcal">${Math.round(e.kcal)}kcal</span>
+        <button class="btn-del" onclick="removeLogEntry(${e.id})" title="削除">×</button>
+      </div>
+    `).join('');
+  }
+  calcTotals();
+}
+
+function diffColor(diff){
+  const d = Math.abs(diff);
+  if(d <= 5) return 'var(--good)';
+  if(d <= 10) return 'var(--warn)';
+  return 'var(--bad)';
+}
+
+function calcTotals(){
+  const totals = combinedTotals();
+  const target = targets[mode];
+
+  const pKcal = totals.p*4, fKcal = totals.f*9, cKcal = totals.c*4;
+  const macroTotal = pKcal+fKcal+cKcal;
+  const pPct = macroTotal>0 ? (pKcal/macroTotal*100) : 0;
+  const fPct = macroTotal>0 ? (fKcal/macroTotal*100) : 0;
+  const cPct = macroTotal>0 ? (cKcal/macroTotal*100) : 0;
+
+  document.getElementById('totalKcal').textContent = Math.round(totals.kcal);
+  document.getElementById('proteinG').textContent = totals.p.toFixed(1)+' g';
+  document.getElementById('fatG').textContent = totals.f.toFixed(1)+' g';
+  document.getElementById('carbG').textContent = totals.c.toFixed(1)+' g';
+
+  document.getElementById('proteinBar').style.width = pPct.toFixed(1)+'%';
+  document.getElementById('fatBar').style.width = fPct.toFixed(1)+'%';
+  document.getElementById('carbBar').style.width = cPct.toFixed(1)+'%';
+
+  document.getElementById('proteinPct').textContent = pPct.toFixed(0)+'%';
+  document.getElementById('fatPct').textContent = fPct.toFixed(0)+'%';
+  document.getElementById('carbPct').textContent = cPct.toFixed(0)+'%';
+
+  // 目標比率との差分
+  const pDiff = pPct - target.p, fDiff = fPct - target.f, cDiff = cPct - target.c;
+  const pDiffEl = document.getElementById('proteinDiff');
+  pDiffEl.textContent = '目標'+target.p+'% (差'+(pDiff>=0?'+':'')+pDiff.toFixed(0)+'pt)';
+  pDiffEl.style.color = diffColor(pDiff);
+  const fDiffEl = document.getElementById('fatDiff');
+  fDiffEl.textContent = '目標'+target.f+'% (差'+(fDiff>=0?'+':'')+fDiff.toFixed(0)+'pt)';
+  fDiffEl.style.color = diffColor(fDiff);
+  const cDiffEl = document.getElementById('carbDiff');
+  cDiffEl.textContent = '目標'+target.c+'% (差'+(cDiff>=0?'+':'')+cDiff.toFixed(0)+'pt)';
+  cDiffEl.style.color = diffColor(cDiff);
+
+  // 残り（目標グラム - 実際）
+  const targetPGrams = target.kcal * target.p/100/4;
+  const targetFGrams = target.kcal * target.f/100/9;
+  const targetCGrams = target.kcal * target.c/100/4;
+  const remainP = targetPGrams - totals.p;
+  const remainF = targetFGrams - totals.f;
+  const remainC = targetCGrams - totals.c;
+  const remainKcal = target.kcal - totals.kcal;
+
+  const remainKcalRow = document.getElementById('remainKcalRow');
+  if(remainKcal >= 0){
+    remainKcalRow.textContent = '目標まであと ' + Math.round(remainKcal) + 'kcal （目標 ' + target.kcal + 'kcal）';
+    remainKcalRow.classList.remove('over');
+  } else {
+    remainKcalRow.textContent = '目標を ' + Math.round(-remainKcal) + 'kcal 超過 （目標 ' + target.kcal + 'kcal）';
+    remainKcalRow.classList.add('over');
+  }
+
+  setRemainText('proteinRemain', remainP, '目標'+targetPGrams.toFixed(1)+'g');
+  setRemainText('fatRemain', remainF, '目標'+targetFGrams.toFixed(1)+'g');
+  setRemainText('carbRemain', remainC, '目標'+targetCGrams.toFixed(1)+'g');
+
+  // 糖質（炭水化物-食物繊維）
+  const netCarb = Math.max(0, totals.c - totals.fb);
+  document.getElementById('netCarbRow').textContent = '糖質：約 ' + netCarb.toFixed(1) + ' g（食物繊維 ' + totals.fb.toFixed(1) + ' g を除く）';
+}
+
+function setRemainText(elId, remain, targetLabel){
+  const el = document.getElementById(elId);
+  if(remain >= 0){
+    el.textContent = 'あと ' + remain.toFixed(1) + 'g （' + targetLabel + '）';
+    el.style.color = '';
+  } else {
+    el.textContent = '+' + (-remain).toFixed(1) + 'g 超過 （' + targetLabel + '）';
+    el.style.color = 'var(--bad)';
+  }
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+renderTargetInputs();
+renderFoods();
+renderMeal();
+renderLog();
+</script>
+</body>
+</html>
