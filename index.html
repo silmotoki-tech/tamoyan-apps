@@ -17,7 +17,7 @@
   :root{
     --ink:#6B4A3E;
     --muted:#C2A39A;
-    --line:#FFE1EC;
+    --line:#9FC4EE;
     --card:#FFFFFF;
   }
   *{box-sizing:border-box;}
@@ -89,7 +89,10 @@
     align-items:center;
     justify-content:center;
     font-size:24px;
-    background:linear-gradient(135deg,#FFE1EC,#FFE9D6);
+    background: repeating-linear-gradient(90deg,
+      #FFFFFF 0px, #FFFFFF 4px,
+      #1C6FD1 4px, #1C6FD1 8px
+    );
   }
   .app-body{flex:1;}
   .app-name{
@@ -131,9 +134,9 @@
   <p class="sub">自作PWA一覧♡ ホーム画面に追加して使ってね</p>
 
   <a class="app-link" href="calorie-calculator/">
-    <div class="app-icon">🍓</div>
+    <div class="app-icon">⭐</div>
     <div class="app-body">
-      <div class="app-name">カロリー計算</div>
+      <div class="app-name">スターマンのカロリー計算App</div>
       <div class="app-desc">食品を選んで量を入れると、カロリーとPFC比率・目標との差分を計算</div>
     </div>
     <div class="app-arrow">›</div>
