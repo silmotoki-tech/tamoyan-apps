@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タモやんアプリ一覧</title>
+<style>
+  :root{
+    --bg:#FAF7F0;
+    --ink:#1B1B16;
+    --line:#DAD3C0;
+    --card:#FFFFFF;
+    --muted:#8A8373;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    padding:24px 16px;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+  }
+  h1{
+    font-size:20px;
+    font-weight:800;
+    margin:0 0 4px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 24px;
+  }
+  .app-link{
+    display:block;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:12px;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .app-link:active{opacity:0.7;}
+  .app-name{
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .app-desc{
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .empty-note{
+    color:var(--muted);
+    font-size:13px;
+    padding:16px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>タモやんアプリ一覧</h1>
+  <p class="sub">自作PWA一覧。ホーム画面に追加して使ってください。</p>
+
+  <a class="app-link" href="calorie-calculator/">
+    <div class="app-name">🍚 カロリー計算</div>
+    <div class="app-desc">食品を選んで量を入れると、カロリーとPFC比率・目標との差分を計算</div>
+  </a>
+
+  <!-- 新しいアプリを作ったら、ここに同じ形式で追加してください -->
+  <!--
+  <a class="app-link" href="フォルダ名/">
+    <div class="app-name">アプリ名</div>
+    <div class="app-desc">説明文</div>
+  </a>
+  -->
+</div>
+</body>
+</html>
