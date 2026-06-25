@@ -17,11 +17,11 @@
   :root{
     --bg:#F3F8FD;
     --ink:#16243F;
-    --line:#D7E6F7;
+    --line:#9FC4EE;
     --card:#FFFFFF;
     --protein:#14315C;
     --fat:#1C6FD1;
-    --carb:#9FB7D1;
+    --carb:#5C8FC9;
     --muted:#6E80A0;
     --good:#9FB7D1;
     --warn:#1C6FD1;
@@ -143,6 +143,7 @@
   .target-grid .full{grid-column: 1 / -1;}
   .target-field label.small{
     display:block;
+    min-height:2.6em;
     font-size:10.5px;
     color:var(--muted);
     margin-bottom:3px;
@@ -222,7 +223,7 @@
     border:none;
     border-radius:999px;
     background:#EAF2FB;
-    color:#F2557B;
+    color:#1C6FD1;
     font-size:16px;
     font-weight:700;
     line-height:1;
@@ -267,6 +268,9 @@
     background:#F7FAFD;
     color:var(--ink);
     font-family:"M PLUS Rounded 1c",sans-serif;
+  }
+  input[type=number]{
+    text-align:center;
   }
   input:focus, select:focus{outline:2px solid #14315C; outline-offset:1px;}
   label.small{
@@ -461,7 +465,7 @@
     <h2 id="targetTitle">🎯 目標設定（通常モード）</h2>
     <div class="target-grid">
       <div class="target-field">
-        <label class="small">目標カロリー(kcal)</label>
+        <label class="small">カロリー(kcal)</label>
         <input id="targetKcal" type="number" step="10" onchange="updateTarget('kcal', this.value)">
       </div>
       <div class="target-field">
@@ -1045,6 +1049,12 @@ renderTargetInputs();
 renderFoods();
 renderMeal();
 renderLog();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
 </script>
 </body>
 </html>
