@@ -11,31 +11,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="カロリー計算">
-<meta name="theme-color" content="#FFEFF6">
+<meta name="theme-color" content="#E6EFFA">
 
 <style>
   :root{
-    --bg:#FFF6F0;
-    --ink:#6B4A3E;
-    --line:#FFE1EC;
+    --bg:#F3F8FD;
+    --ink:#16243F;
+    --line:#D7E6F7;
     --card:#FFFFFF;
-    --protein:#FF8FAB;
-    --fat:#FFC857;
-    --carb:#7FD8A6;
-    --muted:#C2A39A;
-    --good:#7FD8A6;
-    --warn:#FFC857;
+    --protein:#14315C;
+    --fat:#1C6FD1;
+    --carb:#9FB7D1;
+    --muted:#6E80A0;
+    --good:#9FB7D1;
+    --warn:#1C6FD1;
     --bad:#F2557B;
-    --accent:#C9A8E0;
+    --accent:#1C6FD1;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:
-      radial-gradient(circle at 8% 12%, rgba(255,200,220,0.35) 0, transparent 45%),
-      radial-gradient(circle at 92% 8%, rgba(201,168,224,0.25) 0, transparent 40%),
-      linear-gradient(160deg, #FFF6F0 0%, #FFEFF6 100%);
-    background-attachment:fixed;
+    min-height:100vh;
+    background:#FFFFFF;
     color:var(--ink);
     font-family:"M PLUS Rounded 1c",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
     padding:20px;
@@ -50,12 +47,26 @@
     font-weight:500;
     letter-spacing:0.02em;
     margin:0 0 4px;
-    color:#E8628A;
+    color:#14315C;
   }
   .sub{
     color:var(--muted);
     font-size:13px;
+    margin:0 0 12px;
+  }
+  .stripe-banner{
+    height:16px;
     margin:0 0 18px;
+    border-radius:8px;
+    background: repeating-linear-gradient(90deg,
+      #FFFFFF 0px, #FFFFFF 3px,
+      #FFD400 3px, #FFD400 6px,
+      #14315C 6px, #14315C 14px,
+      #1C6FD1 14px, #1C6FD1 24px,
+      #FFD400 24px, #FFD400 27px,
+      #FFFFFF 27px, #FFFFFF 30px
+    );
+    box-shadow:0 2px 6px rgba(28,111,209,0.25);
   }
   .grid{
     display:grid;
@@ -70,7 +81,7 @@
     border:1.5px solid var(--line);
     border-radius:20px;
     padding:18px;
-    box-shadow:0 6px 18px rgba(255,143,171,0.14);
+    box-shadow:0 6px 18px rgba(12,35,64,0.14);
   }
   .card h2{
     font-family:"Kiwi Maru","M PLUS Rounded 1c",sans-serif;
@@ -82,7 +93,7 @@
     justify-content:space-between;
     flex-wrap:wrap;
     gap:6px;
-    color:#E8628A;
+    color:#14315C;
   }
 
   /* mode + target settings */
@@ -92,23 +103,36 @@
     margin-bottom:16px;
   }
   .mode-btn{
+    position:relative;
     flex:1;
-    padding:12px 8px;
-    border:1.5px solid #FFD3E0;
+    height:44px;
+    padding:0 8px;
+    border:1.5px solid #BBD3EF;
     border-radius:999px;
     background:#fff;
-    color:#E8628A;
+    color:#14315C;
     font-family:"M PLUS Rounded 1c",sans-serif;
     font-size:13px;
     font-weight:700;
     cursor:pointer;
     transition:all .15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .mode-btn.active::after{
+    content:"★";
+    position:absolute;
+    top:-7px;
+    right:6px;
+    font-size:12px;
+    color:#14315C;
   }
   .mode-btn.active{
-    background:linear-gradient(135deg,#FF8FAB,#FFB6C9);
-    color:#fff;
-    border-color:#FF8FAB;
-    box-shadow:0 4px 12px rgba(255,143,171,0.45);
+    background:linear-gradient(135deg,#FFD400,#FFE45C);
+    color:#14315C;
+    border-color:#FFD400;
+    box-shadow:0 4px 12px rgba(255,212,0,0.5);
   }
   .target-card{margin-bottom:18px;}
   .target-grid{
@@ -135,7 +159,7 @@
     align-items:center;
     justify-content:space-between;
     padding:10px 6px;
-    border-bottom:1px dashed #FFE1EC;
+    border-bottom:1px dashed #D7E6F7;
     font-size:13.5px;
     gap:8px;
   }
@@ -145,46 +169,73 @@
     font-weight:800;
     letter-spacing:0.03em;
     color:#fff;
-    background:linear-gradient(135deg,#FFA8C0,#FFC9A8);
+    background:linear-gradient(135deg,#14315C,#1C6FD1);
     padding:5px 12px;
     border-radius:999px;
     margin:16px 0 6px;
     display:inline-block;
-    box-shadow:0 2px 6px rgba(255,143,171,0.3);
+    box-shadow:0 2px 6px rgba(12,35,64,0.25);
   }
   .cat-header:first-child{margin-top:0;}
   .food-row:last-child{border-bottom:none;}
   .food-name{font-weight:700;}
   .food-meta{color:var(--muted); font-size:12px;}
   .btn{
+    position:relative;
     border:none;
     border-radius:999px;
-    padding:7px 14px;
+    height:34px;
+    padding:0 16px;
     font-size:12.5px;
     font-weight:700;
     cursor:pointer;
-    background:linear-gradient(135deg,#FF8FAB,#FFB6C9);
-    color:#fff;
-    box-shadow:0 3px 8px rgba(255,143,171,0.35);
+    background:linear-gradient(135deg,#FFD400,#FFE45C);
+    color:#14315C;
+    box-shadow:0 3px 8px rgba(255,212,0,0.45);
     font-family:"M PLUS Rounded 1c",sans-serif;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    white-space:nowrap;
+  }
+  .btn::after{
+    content:"★";
+    position:absolute;
+    top:-7px;
+    right:-5px;
+    font-size:11px;
+    color:#14315C;
+    text-shadow:0 0 0 #14315C;
   }
   .btn:hover{opacity:0.9;}
   .btn-ghost{
     background:#fff;
-    color:#E8628A;
-    border:1.5px solid #FFD3E0;
+    color:#14315C;
+    border:1.5px solid #BBD3EF;
     box-shadow:none;
   }
   .btn-del{
-    background:transparent;
+    width:34px;
+    height:34px;
+    min-width:34px;
+    border:none;
+    border-radius:999px;
+    background:#EAF2FB;
     color:#F2557B;
-    font-size:17px;
-    padding:0 6px;
+    font-size:16px;
+    font-weight:700;
     line-height:1;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
   }
+  .btn-del:active{background:#BBD3EF;}
   .add-form{
     margin-top:12px;
-    border-top:2px dashed #FFD3E0;
+    border-top:2px dashed #BBD3EF;
     padding-top:12px;
     display:none;
   }
@@ -210,14 +261,14 @@
   input, select{
     width:100%;
     padding:8px 10px;
-    border:1.5px solid #FFD3E0;
+    border:1.5px solid #BBD3EF;
     border-radius:12px;
     font-size:13px;
-    background:#fffaf8;
+    background:#F7FAFD;
     color:var(--ink);
     font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  input:focus, select:focus{outline:2px solid #FF8FAB; outline-offset:1px;}
+  input:focus, select:focus{outline:2px solid #14315C; outline-offset:1px;}
   label.small{
     display:block;
     font-size:10.5px;
@@ -235,7 +286,7 @@
     align-items:center;
     gap:8px;
     padding:9px 0;
-    border-bottom:1px dashed #FFE1EC;
+    border-bottom:1px dashed #D7E6F7;
   }
   .meal-row:last-child{border-bottom:none;}
   .meal-row .name{flex:1; font-size:13.5px; font-weight:700;}
@@ -243,13 +294,13 @@
     display:flex; align-items:center; gap:5px;
   }
   .qty-btn{
-    width:32px;
-    height:32px;
-    min-width:32px;
+    width:34px;
+    height:34px;
+    min-width:34px;
     border:none;
     border-radius:999px;
-    background:#FFE1EC;
-    color:#E8628A;
+    background:#D7E6F7;
+    color:#14315C;
     font-size:18px;
     font-weight:700;
     line-height:1;
@@ -259,11 +310,12 @@
     justify-content:center;
     padding:0;
   }
-  .qty-btn:active{background:#FF8FAB; color:#fff;}
+  .qty-btn:active{background:#14315C; color:#fff;}
   .meal-row input[type=number]{
     width:50px;
+    height:34px;
     text-align:center;
-    padding:6px 4px;
+    padding:0 4px;
     -moz-appearance:textfield;
     border-radius:10px;
   }
@@ -280,11 +332,11 @@
     justify-content:space-between;
     padding:7px 10px;
     margin-bottom:6px;
-    background:#FFF8F3;
+    background:#EFF5FC;
     border-radius:12px;
     font-size:12.5px;
   }
-  .log-row .l-label{font-weight:700; color:#E8628A;}
+  .log-row .l-label{font-weight:700; color:#14315C;}
   .log-row .l-kcal{color:var(--muted); font-family:"M PLUS Rounded 1c",sans-serif;}
   .log-actions{
     display:flex;
@@ -294,20 +346,20 @@
 
   /* --- Nutrition card (kawaii) --- */
   .label-box{
-    border:2px solid #FFD3E0;
+    border:2px solid #BBD3EF;
     border-radius:24px;
     padding:18px 18px 16px;
-    background:linear-gradient(180deg,#FFFCFA 0%,#FFF6F9 100%);
-    box-shadow:0 8px 24px rgba(255,143,171,0.18);
+    background:linear-gradient(180deg,#FFFFFF 0%,#F2F7FD 100%);
+    box-shadow:0 8px 24px rgba(12,35,64,0.18);
   }
   .label-title{
     font-family:"Kiwi Maru","M PLUS Rounded 1c",sans-serif;
     font-size:16px;
     font-weight:500;
-    color:#E8628A;
+    color:#14315C;
     padding-bottom:10px;
     margin-bottom:10px;
-    border-bottom:2px dashed #FFD3E0;
+    border-bottom:3px solid #FFD400;
   }
   .label-kcal-row{
     display:flex;
@@ -320,7 +372,7 @@
     font-family:"M PLUS Rounded 1c",sans-serif;
     font-size:32px;
     font-weight:800;
-    color:#E8628A;
+    color:#14315C;
   }
   .remain-row{
     display:flex;
@@ -329,14 +381,14 @@
     color:var(--muted);
     padding:6px 12px;
     margin-bottom:10px;
-    background:#FFF0F5;
+    background:#EAF2FB;
     border-radius:999px;
     font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  .remain-row.over{color:var(--bad); font-weight:700; background:#FFE3EA;}
+  .remain-row.over{color:var(--bad); font-weight:700; background:#DCE9F8;}
   .macro-line{
     padding:10px 0;
-    border-bottom:1px dashed #FFE1EC;
+    border-bottom:1px dashed #D7E6F7;
   }
   .macro-line:last-child{border-bottom:none;}
   .macro-top{
@@ -350,7 +402,7 @@
   .bar-bg{
     height:10px;
     border-radius:999px;
-    background:#FFEEF3;
+    background:#EAF2FB;
     overflow:hidden;
   }
   .bar-fill{height:100%; border-radius:999px; transition:width .3s ease; position:relative; overflow:hidden;}
@@ -386,7 +438,7 @@
     display:inline-block;
     margin-top:10px;
     font-size:12px;
-    color:#E8628A;
+    color:#14315C;
     text-decoration:underline;
     cursor:pointer;
   }
@@ -394,8 +446,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>🍓 カロリー計算プロトタイプ</h1>
-  <p class="sub">食品を選んで個数・量を入れると、合計カロリーとPFC比率、目標との差分が出ます♡</p>
+  <h1>⚾ カロリー計算プロトタイプ</h1>
+  <p class="sub">食品を選んで個数・量を入れると、合計カロリーとPFC比率、目標との差分が出ます⭐</p>
 
   <!-- モード切り替え -->
   <div class="mode-row">
@@ -583,6 +635,9 @@ let foods = [
   {id:25, name:"ハードパン(ロール)", unit:"1個(50g)", kcal:140, p:4.8, f:0.7, c:28.8, fb:1.4, cat:"主食"},
   {id:26, name:"パスタ(乾麺)", unit:"1食(80g)", kcal:278, p:10.3, f:1.4, c:57.0, fb:2.2, cat:"主食"},
   {id:35, name:"そば(乾麺)", unit:"100g", kcal:344, p:14.0, f:2.3, c:63.0, fb:3.7, cat:"主食"},
+  {id:45, name:"かぼちゃ", unit:"25g", kcal:12, p:0.3, f:0.0, c:2.7, fb:0.9, cat:"主食"},
+  {id:46, name:"さつまいも", unit:"25g", kcal:33, p:0.3, f:0.1, c:7.5, fb:0.6, cat:"主食"},
+  {id:53, name:"じゃがいも", unit:"100g", kcal:76, p:1.6, f:0.1, c:17.6, fb:1.3, cat:"主食"},
   {id:2, name:"卵", unit:"1個", kcal:71, p:6.1, f:4.8, c:0.2, fb:0, cat:"卵"},
   {id:3, name:"鶏むね肉(皮なし)", unit:"100g", kcal:110, p:22.5, f:1.5, c:0, fb:0, cat:"肉類"},
   {id:40, name:"鶏もも肉(皮つき)", unit:"100g", kcal:204, p:16.6, f:14.2, c:0, fb:0, cat:"肉類"},
@@ -597,6 +652,12 @@ let foods = [
   {id:16, name:"あじ", unit:"1尾(正味70g)", kcal:88, p:13.8, f:3.2, c:0.1, fb:0, cat:"魚類"},
   {id:17, name:"さば", unit:"1切れ(80g)", kcal:169, p:16.5, f:11.1, c:0.2, fb:0, cat:"魚類"},
   {id:18, name:"ボイル魚(白身)", unit:"100g", kcal:77, p:17.6, f:0.2, c:0.1, fb:0, cat:"魚類"},
+  {id:47, name:"刺身(白身)", unit:"100g", kcal:100, p:20.0, f:1.5, c:0.1, fb:0, cat:"魚類"},
+  {id:48, name:"刺身(赤身)", unit:"100g", kcal:125, p:26.4, f:1.4, c:0.1, fb:0, cat:"魚類"},
+  {id:49, name:"マグロ(赤身)", unit:"100g", kcal:115, p:26.4, f:1.4, c:0.1, fb:0, cat:"魚類"},
+  {id:50, name:"カツオ", unit:"100g", kcal:108, p:25.8, f:0.5, c:0.1, fb:0, cat:"魚類"},
+  {id:51, name:"カンパチ", unit:"100g", kcal:119, p:21.0, f:3.8, c:0.1, fb:0, cat:"魚類"},
+  {id:52, name:"サーモン", unit:"100g", kcal:204, p:20.1, f:12.8, c:0.1, fb:0, cat:"魚類"},
   {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
   {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
   {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
@@ -611,6 +672,7 @@ let foods = [
   {id:11, name:"ブロッコリー", unit:"40g", kcal:13, p:1.7, f:0.2, c:2.1, fb:1.8, cat:"野菜"},
   {id:12, name:"カリフラワー", unit:"40g", kcal:11, p:1.2, f:0.0, c:2.1, fb:1.2, cat:"野菜"},
   {id:42, name:"玉ねぎ", unit:"1/4玉(約50g)", kcal:19, p:0.5, f:0.1, c:4.2, fb:0.8, cat:"野菜"},
+  {id:44, name:"パプリカのピクルス(低糖)", unit:"30g", kcal:8, p:0.2, f:0.1, c:1.8, fb:0.5, cat:"野菜"},
   {id:22, name:"リンゴ", unit:"1/2個(約125g)", kcal:68, p:0.3, f:0.1, c:17.8, fb:2.4, cat:"果物"},
   {id:23, name:"柑橘類(みかんなど)", unit:"1個(約80g)", kcal:39, p:0.6, f:0.1, c:9.6, fb:0.8, cat:"果物"},
   {id:24, name:"キウイフルーツ", unit:"1/2個(約50g)", kcal:26, p:0.5, f:0.1, c:6.7, fb:1.3, cat:"果物"},
@@ -621,7 +683,7 @@ let foods = [
   {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
   {id:41, name:"マヨネーズ", unit:"小さじ1(5g)", kcal:35, p:0.1, f:3.8, c:0.2, fb:0, cat:"油脂"},
 ];
-let nextId = 44;
+let nextId = 54;
 const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","その他"];
 const categoryIcons = {
   "主食":"🍚", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
