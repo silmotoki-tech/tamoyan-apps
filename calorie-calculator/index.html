@@ -4,26 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>カロリー計算 - プロトタイプ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FAF7F0;
-    --ink:#1B1B16;
-    --line:#DAD3C0;
+    --bg:#FFF6F0;
+    --ink:#6B4A3E;
+    --line:#FFE1EC;
     --card:#FFFFFF;
-    --protein:#C0392B;
-    --fat:#D4A017;
-    --carb:#5B7F5B;
-    --muted:#8A8373;
-    --good:#5B7F5B;
-    --warn:#D4A017;
-    --bad:#C0392B;
+    --protein:#FF8FAB;
+    --fat:#FFC857;
+    --carb:#7FD8A6;
+    --muted:#C2A39A;
+    --good:#7FD8A6;
+    --warn:#FFC857;
+    --bad:#F2557B;
+    --accent:#C9A8E0;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:var(--bg);
+    background:
+      radial-gradient(circle at 8% 12%, rgba(255,200,220,0.35) 0, transparent 45%),
+      radial-gradient(circle at 92% 8%, rgba(201,168,224,0.25) 0, transparent 40%),
+      linear-gradient(160deg, #FFF6F0 0%, #FFEFF6 100%);
+    background-attachment:fixed;
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    font-family:"M PLUS Rounded 1c",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
     padding:20px;
   }
   .app{
@@ -31,10 +39,12 @@
     margin:0 auto;
   }
   h1{
-    font-size:20px;
-    font-weight:800;
+    font-family:"Kiwi Maru","M PLUS Rounded 1c",sans-serif;
+    font-size:22px;
+    font-weight:500;
     letter-spacing:0.02em;
     margin:0 0 4px;
+    color:#E8628A;
   }
   .sub{
     color:var(--muted);
@@ -51,42 +61,48 @@
   }
   .card{
     background:var(--card);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:16px;
+    border:1.5px solid var(--line);
+    border-radius:20px;
+    padding:18px;
+    box-shadow:0 6px 18px rgba(255,143,171,0.14);
   }
   .card h2{
-    font-size:14px;
-    font-weight:700;
+    font-family:"Kiwi Maru","M PLUS Rounded 1c",sans-serif;
+    font-size:15px;
+    font-weight:500;
     margin:0 0 12px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     flex-wrap:wrap;
     gap:6px;
+    color:#E8628A;
   }
 
   /* mode + target settings */
   .mode-row{
     display:flex;
-    gap:8px;
-    margin-bottom:14px;
+    gap:10px;
+    margin-bottom:16px;
   }
   .mode-btn{
     flex:1;
-    padding:10px 8px;
-    border:1px solid var(--line);
-    border-radius:8px;
+    padding:12px 8px;
+    border:1.5px solid #FFD3E0;
+    border-radius:999px;
     background:#fff;
-    color:var(--muted);
+    color:#E8628A;
+    font-family:"M PLUS Rounded 1c",sans-serif;
     font-size:13px;
     font-weight:700;
     cursor:pointer;
+    transition:all .15s ease;
   }
   .mode-btn.active{
-    background:var(--ink);
+    background:linear-gradient(135deg,#FF8FAB,#FFB6C9);
     color:#fff;
-    border-color:var(--ink);
+    border-color:#FF8FAB;
+    box-shadow:0 4px 12px rgba(255,143,171,0.45);
   }
   .target-card{margin-bottom:18px;}
   .target-grid{
@@ -104,7 +120,7 @@
   .pct-sum-note{
     font-size:11px;
     color:var(--muted);
-    margin-top:6px;
+    margin-top:8px;
   }
   .pct-sum-note.bad{color:var(--bad); font-weight:700;}
 
@@ -112,53 +128,58 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:9px 4px;
-    border-bottom:1px solid var(--line);
+    padding:10px 6px;
+    border-bottom:1px dashed #FFE1EC;
     font-size:13.5px;
     gap:8px;
   }
   .cat-header{
-    font-size:11px;
+    font-family:"M PLUS Rounded 1c",sans-serif;
+    font-size:11.5px;
     font-weight:800;
-    letter-spacing:0.06em;
+    letter-spacing:0.03em;
     color:#fff;
-    background:var(--ink);
-    padding:4px 8px;
-    border-radius:4px;
-    margin:14px 0 4px;
+    background:linear-gradient(135deg,#FFA8C0,#FFC9A8);
+    padding:5px 12px;
+    border-radius:999px;
+    margin:16px 0 6px;
     display:inline-block;
+    box-shadow:0 2px 6px rgba(255,143,171,0.3);
   }
   .cat-header:first-child{margin-top:0;}
   .food-row:last-child{border-bottom:none;}
-  .food-name{font-weight:600;}
+  .food-name{font-weight:700;}
   .food-meta{color:var(--muted); font-size:12px;}
   .btn{
     border:none;
-    border-radius:6px;
-    padding:6px 10px;
+    border-radius:999px;
+    padding:7px 14px;
     font-size:12.5px;
-    font-weight:600;
+    font-weight:700;
     cursor:pointer;
-    background:var(--ink);
+    background:linear-gradient(135deg,#FF8FAB,#FFB6C9);
     color:#fff;
+    box-shadow:0 3px 8px rgba(255,143,171,0.35);
+    font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  .btn:hover{opacity:0.85;}
+  .btn:hover{opacity:0.9;}
   .btn-ghost{
-    background:transparent;
-    color:var(--muted);
-    border:1px solid var(--line);
+    background:#fff;
+    color:#E8628A;
+    border:1.5px solid #FFD3E0;
+    box-shadow:none;
   }
   .btn-del{
     background:transparent;
-    color:#B33;
-    font-size:16px;
+    color:#F2557B;
+    font-size:17px;
     padding:0 6px;
     line-height:1;
   }
   .add-form{
-    margin-top:10px;
-    border-top:1px dashed var(--line);
-    padding-top:10px;
+    margin-top:12px;
+    border-top:2px dashed #FFD3E0;
+    padding-top:12px;
     display:none;
   }
   .add-form.open{display:block;}
@@ -182,14 +203,15 @@
   }
   input, select{
     width:100%;
-    padding:7px 8px;
-    border:1px solid var(--line);
-    border-radius:6px;
+    padding:8px 10px;
+    border:1.5px solid #FFD3E0;
+    border-radius:12px;
     font-size:13px;
-    background:#fff;
+    background:#fffaf8;
     color:var(--ink);
+    font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  input:focus, select:focus{outline:2px solid var(--ink); outline-offset:1px;}
+  input:focus, select:focus{outline:2px solid #FF8FAB; outline-offset:1px;}
   label.small{
     display:block;
     font-size:10.5px;
@@ -200,24 +222,49 @@
     color:var(--muted);
     font-size:13px;
     text-align:center;
-    padding:18px 0;
+    padding:20px 0;
   }
   .meal-row{
     display:flex;
     align-items:center;
     gap:8px;
-    padding:8px 0;
-    border-bottom:1px solid var(--line);
+    padding:9px 0;
+    border-bottom:1px dashed #FFE1EC;
   }
   .meal-row:last-child{border-bottom:none;}
-  .meal-row .name{flex:1; font-size:13.5px; font-weight:600;}
+  .meal-row .name{flex:1; font-size:13.5px; font-weight:700;}
   .meal-row .qty-wrap{
-    display:flex; align-items:center; gap:4px;
+    display:flex; align-items:center; gap:5px;
   }
+  .qty-btn{
+    width:32px;
+    height:32px;
+    min-width:32px;
+    border:none;
+    border-radius:999px;
+    background:#FFE1EC;
+    color:#E8628A;
+    font-size:18px;
+    font-weight:700;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .qty-btn:active{background:#FF8FAB; color:#fff;}
   .meal-row input[type=number]{
-    width:54px;
-    text-align:right;
-    padding:5px 6px;
+    width:50px;
+    text-align:center;
+    padding:6px 4px;
+    -moz-appearance:textfield;
+    border-radius:10px;
+  }
+  .meal-row input[type=number]::-webkit-inner-spin-button,
+  .meal-row input[type=number]::-webkit-outer-spin-button{
+    -webkit-appearance:none;
+    margin:0;
   }
   .meal-row .unit{font-size:12px; color:var(--muted);}
 
@@ -225,101 +272,115 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:6px 0;
-    border-bottom:1px solid var(--line);
+    padding:7px 10px;
+    margin-bottom:6px;
+    background:#FFF8F3;
+    border-radius:12px;
     font-size:12.5px;
   }
-  .log-row:last-child{border-bottom:none;}
-  .log-row .l-label{font-weight:700;}
-  .log-row .l-kcal{color:var(--muted); font-family:"Courier New",monospace;}
+  .log-row .l-label{font-weight:700; color:#E8628A;}
+  .log-row .l-kcal{color:var(--muted); font-family:"M PLUS Rounded 1c",sans-serif;}
   .log-actions{
     display:flex;
     gap:8px;
     margin-top:10px;
   }
 
-  /* --- Nutrition Facts label --- */
+  /* --- Nutrition card (kawaii) --- */
   .label-box{
-    border:3px solid var(--ink);
-    padding:14px 16px;
-    background:#fff;
+    border:2px solid #FFD3E0;
+    border-radius:24px;
+    padding:18px 18px 16px;
+    background:linear-gradient(180deg,#FFFCFA 0%,#FFF6F9 100%);
+    box-shadow:0 8px 24px rgba(255,143,171,0.18);
   }
   .label-title{
+    font-family:"Kiwi Maru","M PLUS Rounded 1c",sans-serif;
     font-size:16px;
-    font-weight:800;
-    border-bottom:8px solid var(--ink);
-    padding-bottom:6px;
-    margin-bottom:6px;
+    font-weight:500;
+    color:#E8628A;
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:2px dashed #FFD3E0;
   }
   .label-kcal-row{
     display:flex;
     justify-content:space-between;
     align-items:baseline;
-    border-bottom:4px solid var(--ink);
-    padding:6px 0 2px;
+    padding:4px 0 6px;
   }
-  .label-kcal-row .lk-label{font-size:14px; font-weight:700;}
+  .label-kcal-row .lk-label{font-size:13px; font-weight:700; color:var(--muted);}
   .label-kcal-row .lk-value{
-    font-family:"Arial Black", Impact, sans-serif;
-    font-size:30px;
-    font-weight:900;
+    font-family:"M PLUS Rounded 1c",sans-serif;
+    font-size:32px;
+    font-weight:800;
+    color:#E8628A;
   }
   .remain-row{
     display:flex;
     justify-content:space-between;
     font-size:11.5px;
     color:var(--muted);
-    padding:4px 0 8px;
-    border-bottom:4px solid var(--ink);
-    font-family:"Courier New",monospace;
+    padding:6px 12px;
+    margin-bottom:10px;
+    background:#FFF0F5;
+    border-radius:999px;
+    font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  .remain-row.over{color:var(--bad); font-weight:700;}
+  .remain-row.over{color:var(--bad); font-weight:700; background:#FFE3EA;}
   .macro-line{
-    padding:8px 0;
-    border-bottom:1px solid var(--line);
+    padding:10px 0;
+    border-bottom:1px dashed #FFE1EC;
   }
   .macro-line:last-child{border-bottom:none;}
   .macro-top{
     display:flex;
     justify-content:space-between;
     font-size:13px;
-    margin-bottom:5px;
+    margin-bottom:6px;
   }
-  .macro-top .mname{font-weight:700;}
-  .macro-top .mgrams{font-family:"Courier New",monospace; color:var(--muted);}
+  .macro-top .mname{font-weight:800;}
+  .macro-top .mgrams{font-family:"M PLUS Rounded 1c",sans-serif; color:var(--muted);}
   .bar-bg{
-    height:8px;
-    border-radius:4px;
-    background:#EFEAE0;
+    height:10px;
+    border-radius:999px;
+    background:#FFEEF3;
     overflow:hidden;
   }
-  .bar-fill{height:100%; border-radius:4px;}
+  .bar-fill{height:100%; border-radius:999px; transition:width .3s ease; position:relative; overflow:hidden;}
+  .bar-fill::after{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0; height:45%;
+    background:rgba(255,255,255,0.35);
+    border-radius:999px 999px 0 0;
+  }
   .pct-row{
     display:flex;
     justify-content:space-between;
     font-size:11.5px;
-    margin-top:3px;
-    font-family:"Courier New",monospace;
+    margin-top:4px;
+    font-family:"M PLUS Rounded 1c",sans-serif;
   }
-  .pct-row .actual{color:var(--muted);}
+  .pct-row .actual{color:var(--muted); font-weight:700;}
   .pct-row .target-diff{font-weight:700;}
   .subcarb{
     font-size:11px;
     color:var(--muted);
-    margin-top:2px;
+    margin-top:3px;
     padding-left:2px;
   }
   .footnote{
     font-size:10.5px;
     color:var(--muted);
-    margin-top:10px;
-    line-height:1.5;
+    margin-top:12px;
+    line-height:1.6;
   }
   .reset-link{
     display:inline-block;
     margin-top:10px;
     font-size:12px;
-    color:var(--muted);
+    color:#E8628A;
     text-decoration:underline;
     cursor:pointer;
   }
@@ -327,8 +388,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>カロリー計算プロトタイプ</h1>
-  <p class="sub">食品を選んで個数・量を入れると、合計カロリーとPFC比率、目標との差分が出ます</p>
+  <h1>🍓 カロリー計算プロトタイプ</h1>
+  <p class="sub">食品を選んで個数・量を入れると、合計カロリーとPFC比率、目標との差分が出ます♡</p>
 
   <!-- モード切り替え -->
   <div class="mode-row">
@@ -338,7 +399,7 @@
 
   <!-- 目標設定 -->
   <div class="card target-card">
-    <h2 id="targetTitle">目標設定（通常モード）</h2>
+    <h2 id="targetTitle">🎯 目標設定（通常モード）</h2>
     <div class="target-grid">
       <div class="target-field">
         <label class="small">目標カロリー(kcal)</label>
@@ -363,7 +424,7 @@
   <div class="grid">
     <!-- 食品ライブラリ -->
     <div class="card">
-      <h2>食品ライブラリ <button class="btn btn-ghost" onclick="toggleAddForm()">+ 食品を追加</button></h2>
+      <h2>🍽️ 食品ライブラリ <button class="btn btn-ghost" onclick="toggleAddForm()">+ 食品を追加</button></h2>
       <div id="foodList"></div>
 
       <div class="add-form" id="addForm">
@@ -387,6 +448,7 @@
               <option value="卵">卵</option>
               <option value="大豆・乳製品">大豆・乳製品</option>
               <option value="豆類">豆類</option>
+              <option value="汁物">汁物</option>
               <option value="野菜">野菜</option>
               <option value="果物">果物</option>
               <option value="油脂">油脂</option>
@@ -428,7 +490,7 @@
     <!-- 今回の食事 + 今日の記録 + 栄養成分表示 -->
     <div>
       <div class="card" style="margin-bottom:18px;">
-        <h2>今回の食事</h2>
+        <h2>🍱 今回の食事</h2>
         <div id="mealList"></div>
         <div class="log-actions">
           <button class="btn" onclick="logMeal()">この食事を記録に追加</button>
@@ -437,13 +499,13 @@
       </div>
 
       <div class="card" style="margin-bottom:18px;">
-        <h2>今日の記録</h2>
+        <h2>📔 今日の記録</h2>
         <div id="logList"></div>
         <span class="reset-link" onclick="resetDay()">今日の記録を全てリセット</span>
       </div>
 
       <div class="label-box">
-        <div class="label-title">栄養成分表示（本日合計）</div>
+        <div class="label-title">🍓 栄養成分表示（本日合計）</div>
         <div class="label-kcal-row">
           <span class="lk-label">カロリー合計</span>
           <span class="lk-value" id="totalKcal">0</span>
@@ -453,8 +515,11 @@
 
         <div class="macro-line">
           <div class="macro-top">
-            <span class="mname" style="color:var(--protein)">タンパク質</span>
+            <span class="mname" style="color:var(--protein)">🍗 タンパク質</span>
             <span class="mgrams" id="proteinG">0.0 g</span>
+          </div>
+          <div class="pct-row">
+            <span class="actual" id="proteinAchieve">達成率 0%</span>
           </div>
           <div class="bar-bg"><div class="bar-fill" id="proteinBar" style="background:var(--protein); width:0%"></div></div>
           <div class="pct-row">
@@ -466,8 +531,11 @@
 
         <div class="macro-line">
           <div class="macro-top">
-            <span class="mname" style="color:var(--fat)">脂質</span>
+            <span class="mname" style="color:var(--fat)">🧈 脂質</span>
             <span class="mgrams" id="fatG">0.0 g</span>
+          </div>
+          <div class="pct-row">
+            <span class="actual" id="fatAchieve">達成率 0%</span>
           </div>
           <div class="bar-bg"><div class="bar-fill" id="fatBar" style="background:var(--fat); width:0%"></div></div>
           <div class="pct-row">
@@ -479,8 +547,11 @@
 
         <div class="macro-line">
           <div class="macro-top">
-            <span class="mname" style="color:var(--carb)">炭水化物</span>
+            <span class="mname" style="color:var(--carb)">🍚 炭水化物</span>
             <span class="mgrams" id="carbG">0.0 g</span>
+          </div>
+          <div class="pct-row">
+            <span class="actual" id="carbAchieve">達成率 0%</span>
           </div>
           <div class="bar-bg"><div class="bar-fill" id="carbBar" style="background:var(--carb); width:0%"></div></div>
           <div class="pct-row">
@@ -501,13 +572,14 @@
 
 <script>
 let foods = [
-  {id:1, name:"ご飯(白米)", unit:"1膳(150g)", kcal:252, p:3.8, f:0.5, c:55.7, fb:0.5, cat:"主食"},
-  {id:39, name:"ご飯(玄米)", unit:"1膳(150g)", kcal:228, p:4.2, f:1.5, c:53.4, fb:2.1, cat:"主食"},
+  {id:1, name:"ご飯(白米)", unit:"80g", kcal:134, p:2.0, f:0.3, c:29.7, fb:0.3, cat:"主食"},
+  {id:39, name:"ご飯(玄米)", unit:"80g", kcal:122, p:2.2, f:0.8, c:28.5, fb:1.1, cat:"主食"},
   {id:25, name:"ハードパン(ロール)", unit:"1個(50g)", kcal:140, p:4.8, f:0.7, c:28.8, fb:1.4, cat:"主食"},
   {id:26, name:"パスタ(乾麺)", unit:"1食(80g)", kcal:278, p:10.3, f:1.4, c:57.0, fb:2.2, cat:"主食"},
   {id:35, name:"そば(乾麺)", unit:"100g", kcal:344, p:14.0, f:2.3, c:63.0, fb:3.7, cat:"主食"},
   {id:2, name:"卵", unit:"1個", kcal:71, p:6.1, f:4.8, c:0.2, fb:0, cat:"卵"},
   {id:3, name:"鶏むね肉(皮なし)", unit:"100g", kcal:110, p:22.5, f:1.5, c:0, fb:0, cat:"肉類"},
+  {id:40, name:"鶏もも肉(皮つき)", unit:"100g", kcal:204, p:16.6, f:14.2, c:0, fb:0, cat:"肉類"},
   {id:19, name:"豚肉(もも・赤身)", unit:"100g", kcal:138, p:20.5, f:5.3, c:0.2, fb:0, cat:"肉類"},
   {id:27, name:"豚バラ肉", unit:"100g", kcal:386, p:14.2, f:35.4, c:0.1, fb:0, cat:"肉類"},
   {id:28, name:"豚肉(ステーキ・ロース)", unit:"100g", kcal:263, p:19.3, f:19.2, c:0.2, fb:0, cat:"肉類"},
@@ -525,12 +597,14 @@ let foods = [
   {id:14, name:"納豆", unit:"1パック(45g)", kcal:85, p:7.4, f:4.5, c:5.4, fb:3.0, cat:"大豆・乳製品"},
   {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"豆類"},
   {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"豆類"},
+  {id:43, name:"味噌汁(野菜・海藻)", unit:"1杯(約150ml)", kcal:40, p:2.5, f:1.0, c:5.0, fb:1.0, cat:"汁物"},
   {id:4, name:"ほうれん草", unit:"40g", kcal:8, p:0.9, f:0.2, c:1.2, fb:1.1, cat:"野菜"},
   {id:8, name:"トマト", unit:"1/4個(約38g)", kcal:7, p:0.3, f:0.1, c:1.8, fb:0.4, cat:"野菜"},
   {id:9, name:"プチトマト", unit:"1個(15g)", kcal:5, p:0.2, f:0.0, c:0.9, fb:0.2, cat:"野菜"},
   {id:10, name:"きのこ(しめじ等)", unit:"40g", kcal:8, p:1.1, f:0.1, c:1.9, fb:1.4, cat:"野菜"},
   {id:11, name:"ブロッコリー", unit:"40g", kcal:13, p:1.7, f:0.2, c:2.1, fb:1.8, cat:"野菜"},
   {id:12, name:"カリフラワー", unit:"40g", kcal:11, p:1.2, f:0.0, c:2.1, fb:1.2, cat:"野菜"},
+  {id:42, name:"玉ねぎ", unit:"1/4玉(約50g)", kcal:19, p:0.5, f:0.1, c:4.2, fb:0.8, cat:"野菜"},
   {id:22, name:"リンゴ", unit:"1/2個(約125g)", kcal:68, p:0.3, f:0.1, c:17.8, fb:2.4, cat:"果物"},
   {id:23, name:"柑橘類(みかんなど)", unit:"1個(約80g)", kcal:39, p:0.6, f:0.1, c:9.6, fb:0.8, cat:"果物"},
   {id:24, name:"キウイフルーツ", unit:"1/2個(約50g)", kcal:26, p:0.5, f:0.1, c:6.7, fb:1.3, cat:"果物"},
@@ -539,9 +613,14 @@ let foods = [
   {id:34, name:"バナナ", unit:"1本(約100g)", kcal:86, p:1.1, f:0.2, c:22.5, fb:1.1, cat:"果物"},
   {id:13, name:"オリーブオイル", unit:"大さじ1(13g)", kcal:125, p:0, f:13.6, c:0, fb:0, cat:"油脂"},
   {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
+  {id:41, name:"マヨネーズ", unit:"小さじ1(5g)", kcal:35, p:0.1, f:3.8, c:0.2, fb:0, cat:"油脂"},
 ];
-let nextId = 40;
-const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","野菜","果物","油脂","その他"];
+let nextId = 44;
+const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","その他"];
+const categoryIcons = {
+  "主食":"🍚", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
+  "豆類":"🫘", "汁物":"🍵", "野菜":"🥦", "果物":"🍓", "油脂":"🧈", "その他":"✨"
+};
 
 let targets = {
   fasting: {kcal:500, p:35, f:25, c:40},
@@ -554,7 +633,7 @@ let dailyLog = []; // {id, label, kcal, p, f, c, fb} -- 記録済みの食事
 let logSeq = 1;
 
 function getStep(){
-  return mode === 'fasting' ? 0.1 : 0.5;
+  return 0.2;
 }
 
 function switchMode(m){
@@ -642,6 +721,14 @@ function addToMeal(foodId){
   renderMeal();
 }
 
+function stepQty(foodId, direction){
+  const item = meal.find(m => m.foodId === foodId);
+  if(!item) return;
+  const step = getStep();
+  item.qty = Math.max(0, Math.round((item.qty + direction*step) * 100) / 100);
+  renderMeal();
+}
+
 function updateQty(foodId, value){
   const v = parseFloat(value);
   const item = meal.find(m => m.foodId === foodId);
@@ -720,7 +807,7 @@ function renderFoods(){
   categoryOrder.forEach(cat => {
     const items = foods.filter(f => f.cat === cat);
     if(items.length === 0) return;
-    html += `<div class="cat-header">${escapeHtml(cat)}</div>`;
+    html += `<div class="cat-header">${categoryIcons[cat]||'🍴'} ${escapeHtml(cat)}</div>`;
     html += items.map(f => `
       <div class="food-row">
         <div>
@@ -741,7 +828,7 @@ function renderMeal(){
   const el = document.getElementById('mealList');
   const step = getStep();
   if(meal.length === 0){
-    el.innerHTML = '<div class="meal-empty">まだ何も追加されていません<br>左の食品ライブラリから「追加」を押してください</div>';
+    el.innerHTML = '<div class="meal-empty">🍽️ まだ何も追加されていません<br>左の食品ライブラリから「追加」を押してください</div>';
   } else {
     el.innerHTML = meal.map(m => {
       const f = foods.find(x => x.id === m.foodId);
@@ -750,7 +837,9 @@ function renderMeal(){
         <div class="meal-row">
           <div class="name">${escapeHtml(f.name)}</div>
           <div class="qty-wrap">
+            <button class="qty-btn" onclick="stepQty(${f.id}, -1)">－</button>
             <input type="number" step="${step}" min="0" value="${m.qty}" onchange="updateQty(${f.id}, this.value)">
+            <button class="qty-btn" onclick="stepQty(${f.id}, 1)">＋</button>
             <span class="unit">${escapeHtml(f.unit)}</span>
           </div>
           <button class="btn-del" onclick="removeFromMeal(${f.id})" title="削除">×</button>
@@ -764,7 +853,7 @@ function renderMeal(){
 function renderLog(){
   const el = document.getElementById('logList');
   if(dailyLog.length === 0){
-    el.innerHTML = '<div class="meal-empty">まだ記録がありません</div>';
+    el.innerHTML = '<div class="meal-empty">📝 まだ記録がありません</div>';
   } else {
     el.innerHTML = dailyLog.map(e => `
       <div class="log-row">
@@ -799,15 +888,25 @@ function calcTotals(){
   document.getElementById('fatG').textContent = totals.f.toFixed(1)+' g';
   document.getElementById('carbG').textContent = totals.c.toFixed(1)+' g';
 
-  document.getElementById('proteinBar').style.width = pPct.toFixed(1)+'%';
-  document.getElementById('fatBar').style.width = fPct.toFixed(1)+'%';
-  document.getElementById('carbBar').style.width = cPct.toFixed(1)+'%';
+  // 残り（目標グラム - 実際）
+  const targetPGrams = target.kcal * target.p/100/4;
+  const targetFGrams = target.kcal * target.f/100/9;
+  const targetCGrams = target.kcal * target.c/100/4;
+  const remainP = targetPGrams - totals.p;
+  const remainF = targetFGrams - totals.f;
+  const remainC = targetCGrams - totals.c;
+  const remainKcal = target.kcal - totals.kcal;
 
-  document.getElementById('proteinPct').textContent = pPct.toFixed(0)+'%';
-  document.getElementById('fatPct').textContent = fPct.toFixed(0)+'%';
-  document.getElementById('carbPct').textContent = cPct.toFixed(0)+'%';
+  // バーは「目標グラムに対する達成率」を表示する（100%で目標達成、超えたら赤）
+  setAchievementBar('protein', totals.p, targetPGrams);
+  setAchievementBar('fat', totals.f, targetFGrams);
+  setAchievementBar('carb', totals.c, targetCGrams);
 
-  // 目標比率との差分
+  // カロリー比率（参考情報として、目標比率との差も表示）
+  document.getElementById('proteinPct').textContent = 'カロリー比率 '+pPct.toFixed(0)+'%';
+  document.getElementById('fatPct').textContent = 'カロリー比率 '+fPct.toFixed(0)+'%';
+  document.getElementById('carbPct').textContent = 'カロリー比率 '+cPct.toFixed(0)+'%';
+
   const pDiff = pPct - target.p, fDiff = fPct - target.f, cDiff = cPct - target.c;
   const pDiffEl = document.getElementById('proteinDiff');
   pDiffEl.textContent = '目標'+target.p+'% (差'+(pDiff>=0?'+':'')+pDiff.toFixed(0)+'pt)';
@@ -818,15 +917,6 @@ function calcTotals(){
   const cDiffEl = document.getElementById('carbDiff');
   cDiffEl.textContent = '目標'+target.c+'% (差'+(cDiff>=0?'+':'')+cDiff.toFixed(0)+'pt)';
   cDiffEl.style.color = diffColor(cDiff);
-
-  // 残り（目標グラム - 実際）
-  const targetPGrams = target.kcal * target.p/100/4;
-  const targetFGrams = target.kcal * target.f/100/9;
-  const targetCGrams = target.kcal * target.c/100/4;
-  const remainP = targetPGrams - totals.p;
-  const remainF = targetFGrams - totals.f;
-  const remainC = targetCGrams - totals.c;
-  const remainKcal = target.kcal - totals.kcal;
 
   const remainKcalRow = document.getElementById('remainKcalRow');
   if(remainKcal >= 0){
@@ -844,6 +934,27 @@ function calcTotals(){
   // 糖質（炭水化物-食物繊維）
   const netCarb = Math.max(0, totals.c - totals.fb);
   document.getElementById('netCarbRow').textContent = '糖質：約 ' + netCarb.toFixed(1) + ' g（食物繊維 ' + totals.fb.toFixed(1) + ' g を除く）';
+}
+
+function setAchievementBar(key, actual, targetGrams){
+  const bar = document.getElementById(key+'Bar');
+  const pctEl = document.getElementById(key+'Achieve');
+  let achievePct = targetGrams > 0 ? (actual/targetGrams*100) : 0;
+  const barWidth = Math.min(100, Math.max(0, achievePct));
+  bar.style.width = barWidth.toFixed(1)+'%';
+  if(achievePct > 100){
+    bar.style.background = 'var(--bad)';
+    pctEl.textContent = '達成率 ' + achievePct.toFixed(0) + '%（目標超）';
+    pctEl.style.color = 'var(--bad)';
+  } else if(achievePct >= 90){
+    bar.style.background = 'var(--good)';
+    pctEl.textContent = '達成率 ' + achievePct.toFixed(0) + '%';
+    pctEl.style.color = 'var(--good)';
+  } else {
+    bar.style.background = 'var(--' + key + ')';
+    pctEl.textContent = '達成率 ' + achievePct.toFixed(0) + '%';
+    pctEl.style.color = '';
+  }
 }
 
 function setRemainText(elId, remain, targetLabel){
