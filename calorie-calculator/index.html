@@ -1008,7 +1008,7 @@ function renderFoods(){
     html += `<div class="food-grid">${favItems.map(foodRowHtml).join('')}</div>`;
   }
   categoryOrder.forEach(cat => {
-    const items = foods.filter(f => f.cat === cat);
+    const items = foods.filter(f => f.cat === cat && !favoriteIds.includes(f.id));
     if(items.length === 0) return;
     html += `<div class="cat-header">${categoryIcons[cat]||'🍴'} ${escapeHtml(cat)}</div>`;
     html += `<div class="food-grid">${items.map(foodRowHtml).join('')}</div>`;
