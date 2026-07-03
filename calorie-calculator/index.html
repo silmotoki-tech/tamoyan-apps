@@ -155,14 +155,47 @@
   }
   .pct-sum-note.bad{color:var(--bad); font-weight:700;}
 
+  .food-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:4px;
+  }
   .food-row{
     display:flex;
-    align-items:center;
+    flex-direction:column;
+    padding:10px;
+    border:1px solid #D7E6F7;
+    border-radius:14px;
+    font-size:13px;
+    gap:6px;
+    background:#fff;
+  }
+  .food-row .fr-top{
+    display:flex;
+    align-items:flex-start;
     justify-content:space-between;
-    padding:10px 6px;
-    border-bottom:1px dashed #D7E6F7;
-    font-size:13.5px;
-    gap:8px;
+    gap:4px;
+  }
+  .food-row .fav-btn{
+    padding:0;
+    min-width:20px;
+    font-size:17px;
+  }
+  .fav-btn{
+    background:none;
+    border:none;
+    font-size:20px;
+    color:#FFD400;
+    cursor:pointer;
+    padding:0 2px;
+    line-height:1;
+    min-width:24px;
+  }
+  .fav-btn.active{color:#FFD400;}
+  .cat-header.fav-header{
+    background:linear-gradient(135deg,#FFD400,#FFE45C);
+    color:#14315C;
   }
   .cat-header{
     font-family:"M PLUS Rounded 1c",sans-serif;
@@ -180,6 +213,7 @@
   .cat-header:first-child{margin-top:0;}
   .food-row:last-child{border-bottom:none;}
   .food-name{font-weight:700;}
+  .food-unit-inline{font-weight:400; font-size:11px; color:var(--muted);}
   .food-meta{color:var(--muted); font-size:12px;}
   .btn{
     position:relative;
@@ -234,6 +268,15 @@
     padding:0;
   }
   .btn-del:active{background:#BBD3EF;}
+  .btn-del.subtle{
+    width:22px;
+    height:22px;
+    min-width:22px;
+    background:transparent;
+    color:#C7D6E8;
+    font-size:13px;
+  }
+  .btn-del.subtle:active{background:#EAF2FB; color:#1C6FD1;}
   .add-form{
     margin-top:12px;
     border-top:2px dashed #BBD3EF;
@@ -488,6 +531,7 @@
     <!-- 食品ライブラリ -->
     <div class="card">
       <h2>🍽️ 食品ライブラリ <button class="btn btn-ghost" onclick="toggleAddForm()">+ 食品を追加</button></h2>
+      <input id="foodSearch" type="text" placeholder="🔍 食品名で検索" oninput="renderFoods()" style="margin-bottom:12px;">
       <div id="foodList"></div>
 
       <div class="add-form" id="addForm">
@@ -637,7 +681,7 @@
 let foods = [
   {id:1, name:"ご飯(白米)", unit:"80g", kcal:134, p:2.0, f:0.3, c:29.7, fb:0.3, cat:"主食"},
   {id:39, name:"ご飯(玄米)", unit:"80g", kcal:122, p:2.2, f:0.8, c:28.5, fb:1.1, cat:"主食"},
-  {id:25, name:"ハードパン(ロール)", unit:"1個(50g)", kcal:140, p:4.8, f:0.7, c:28.8, fb:1.4, cat:"主食"},
+  {id:25, name:"食パン(6枚切り)", unit:"1枚(60g)", kcal:156, p:5.6, f:2.6, c:28.0, fb:1.4, cat:"主食"},
   {id:26, name:"パスタ(乾麺)", unit:"1食(80g)", kcal:278, p:10.3, f:1.4, c:57.0, fb:2.2, cat:"主食"},
   {id:35, name:"そば(乾麺)", unit:"100g", kcal:344, p:14.0, f:2.3, c:63.0, fb:3.7, cat:"主食"},
   {id:45, name:"かぼちゃ", unit:"25g", kcal:12, p:0.3, f:0.0, c:2.7, fb:0.9, cat:"主食"},
@@ -666,6 +710,7 @@ let foods = [
   {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
   {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
   {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
+  {id:54, name:"ヨーグルトセット", unit:"1セット(バーリーマックス5g+チアシード5g+米ぬかパウダー10g+豆乳ヨーグルト50g)", kcal:104, p:4.7, f:4.9, c:11.7, fb:5.7, cat:"大豆・乳製品"},
   {id:14, name:"納豆", unit:"1パック(45g)", kcal:85, p:7.4, f:4.5, c:5.4, fb:3.0, cat:"大豆・乳製品"},
   {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"豆類"},
   {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"豆類"},
@@ -688,7 +733,7 @@ let foods = [
   {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
   {id:41, name:"マヨネーズ", unit:"小さじ1(5g)", kcal:35, p:0.1, f:3.8, c:0.2, fb:0, cat:"油脂"},
 ];
-let nextId = 54;
+let nextId = 55;
 const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","その他"];
 const categoryIcons = {
   "主食":"🍚", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
@@ -701,9 +746,36 @@ let targets = {
 };
 let mode = 'normal';
 
-let meal = []; // {foodId, qty}  -- 今回の食事（記録前）
-let dailyLog = []; // {id, label, kcal, p, f, c, fb} -- 記録済みの食事
+let meal = [];
+let dailyLog = [];
 let logSeq = 1;
+
+// --- localStorage 永続化 ---
+function saveState(){
+  try{
+    localStorage.setItem('starman_targets', JSON.stringify(targets));
+    localStorage.setItem('starman_mode', mode);
+    localStorage.setItem('starman_meal', JSON.stringify(meal));
+    localStorage.setItem('starman_log', JSON.stringify(dailyLog));
+    localStorage.setItem('starman_logSeq', String(logSeq));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const t = localStorage.getItem('starman_targets');
+    if(t) targets = JSON.parse(t);
+    const m = localStorage.getItem('starman_mode');
+    if(m) mode = m;
+    const ml = localStorage.getItem('starman_meal');
+    if(ml) meal = JSON.parse(ml);
+    const dl = localStorage.getItem('starman_log');
+    if(dl) dailyLog = JSON.parse(dl);
+    const ls = localStorage.getItem('starman_logSeq');
+    if(ls) logSeq = parseInt(ls);
+  }catch(e){}
+}
+loadState();
 
 function getStep(){
   return 0.2;
@@ -715,8 +787,9 @@ function switchMode(m){
   document.getElementById('modeBtnFasting').classList.toggle('active', m==='fasting');
   document.getElementById('targetTitle').textContent = '目標設定（' + (m==='normal' ? '通常モード' : 'プチ断食モード') + '）';
   renderTargetInputs();
-  renderMeal(); // qty入力のstepを更新するため再描画
+  renderMeal();
   calcTotals();
+  saveState();
 }
 
 function renderTargetInputs(){
@@ -733,6 +806,7 @@ function updateTarget(field, value){
   targets[mode][field] = isNaN(v) ? 0 : v;
   checkPctSum();
   calcTotals();
+  saveState();
 }
 
 function checkPctSum(){
@@ -792,6 +866,7 @@ function addToMeal(foodId){
     meal.push({foodId, qty:1});
   }
   renderMeal();
+  saveState();
 }
 
 function stepQty(foodId, direction){
@@ -800,6 +875,7 @@ function stepQty(foodId, direction){
   const step = getStep();
   item.qty = Math.max(0, Math.round((item.qty + direction*step) * 100) / 100);
   renderMeal();
+  saveState();
 }
 
 function updateQty(foodId, value){
@@ -809,16 +885,19 @@ function updateQty(foodId, value){
     item.qty = isNaN(v) ? 0 : v;
   }
   renderMeal();
+  saveState();
 }
 
 function removeFromMeal(foodId){
   meal = meal.filter(m => m.foodId !== foodId);
   renderMeal();
+  saveState();
 }
 
 function resetMeal(){
   meal = [];
   renderMeal();
+  saveState();
 }
 
 function mealTotals(){
@@ -846,16 +925,19 @@ function logMeal(){
   meal = [];
   renderMeal();
   renderLog();
+  saveState();
 }
 
 function removeLogEntry(id){
   dailyLog = dailyLog.filter(e => e.id !== id);
   renderLog();
+  saveState();
 }
 
 function resetDay(){
   dailyLog = [];
   renderLog();
+  saveState();
 }
 
 function combinedTotals(){
@@ -870,29 +952,66 @@ function combinedTotals(){
   return totals;
 }
 
+let favoriteIds = [];
+try{
+  const fav = localStorage.getItem('starman_favorites');
+  if(fav) favoriteIds = JSON.parse(fav);
+}catch(e){}
+
+function saveFavorites(){
+  try{ localStorage.setItem('starman_favorites', JSON.stringify(favoriteIds)); }catch(e){}
+}
+
+function toggleFavorite(id){
+  const idx = favoriteIds.indexOf(id);
+  if(idx >= 0){ favoriteIds.splice(idx,1); } else { favoriteIds.push(id); }
+  saveFavorites();
+  renderFoods();
+}
+
+function foodRowHtml(f){
+  const isFav = favoriteIds.includes(f.id);
+  return `
+      <div class="food-row">
+        <div class="fr-top">
+          <div class="food-name">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
+          <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite(${f.id})" title="お気に入り">${isFav?'★':'☆'}</button>
+        </div>
+        <div class="food-meta">${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
+        <button class="btn" onclick="addToMeal(${f.id})" style="width:100%;">追加</button>
+      </div>
+    `;
+}
+
 function renderFoods(){
   const el = document.getElementById('foodList');
   if(foods.length === 0){
     el.innerHTML = '<div class="meal-empty">食品がありません</div>';
     return;
   }
+  const query = (document.getElementById('foodSearch').value || '').trim().toLowerCase();
+
+  if(query){
+    const matched = foods.filter(f => f.name.toLowerCase().includes(query));
+    if(matched.length === 0){
+      el.innerHTML = '<div class="meal-empty">🔍 該当する食品が見つかりません</div>';
+      return;
+    }
+    el.innerHTML = `<div class="food-grid">${matched.map(foodRowHtml).join('')}</div>`;
+    return;
+  }
+
   let html = '';
+  const favItems = foods.filter(f => favoriteIds.includes(f.id));
+  if(favItems.length > 0){
+    html += `<div class="cat-header fav-header">⭐ お気に入り</div>`;
+    html += `<div class="food-grid">${favItems.map(foodRowHtml).join('')}</div>`;
+  }
   categoryOrder.forEach(cat => {
     const items = foods.filter(f => f.cat === cat);
     if(items.length === 0) return;
     html += `<div class="cat-header">${categoryIcons[cat]||'🍴'} ${escapeHtml(cat)}</div>`;
-    html += items.map(f => `
-      <div class="food-row">
-        <div>
-          <div class="food-name">${escapeHtml(f.name)}</div>
-          <div class="food-meta">${escapeHtml(f.unit)} ・ ${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
-        </div>
-        <div style="display:flex; gap:4px; align-items:center;">
-          <button class="btn" onclick="addToMeal(${f.id})">追加</button>
-          <button class="btn-del" onclick="deleteFood(${f.id})" title="削除">×</button>
-        </div>
-      </div>
-    `).join('');
+    html += `<div class="food-grid">${items.map(foodRowHtml).join('')}</div>`;
   });
   el.innerHTML = html;
 }
@@ -1044,6 +1163,11 @@ function setRemainText(elId, remain, targetLabel){
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// モードボタンの表示を復元
+document.getElementById('modeBtnNormal').classList.toggle('active', mode==='normal');
+document.getElementById('modeBtnFasting').classList.toggle('active', mode==='fasting');
+document.getElementById('targetTitle').textContent = '目標設定（' + (mode==='normal' ? '通常モード' : 'プチ断食モード') + '）';
 
 renderTargetInputs();
 renderFoods();
