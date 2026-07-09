@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -338,7 +342,7 @@
   .meal-row:last-child{border-bottom:none;}
   .meal-row .name{flex:1; font-size:13.5px; font-weight:700;}
   .meal-row .qty-wrap{
-    display:flex; align-items:center; gap:5px;
+    display:flex; align-items:center; gap:5px; flex-wrap:wrap;
   }
   .qty-btn{
     width:34px;
@@ -358,6 +362,16 @@
     padding:0;
   }
   .qty-btn:active{background:#14315C; color:#fff;}
+  .qty-btn.x2-btn{
+    width:auto;
+    min-width:34px;
+    padding:0 8px;
+    font-size:12px;
+    font-weight:700;
+    background:#FFD400;
+    color:#14315C;
+  }
+  .qty-btn.x2-btn:active{background:#14315C; color:#FFD400;}
   .meal-row input[type=number]{
     width:50px;
     height:34px;
@@ -384,6 +398,39 @@
     font-size:12.5px;
   }
   .log-row .l-label{font-weight:700; color:#14315C;}
+  .history-item{
+    border:1px solid #D7E6F7;
+    border-radius:14px;
+    margin-bottom:8px;
+    overflow:hidden;
+  }
+  .history-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    cursor:pointer;
+    background:#F7FAFD;
+  }
+  .history-head .h-date{font-weight:700; color:#14315C; font-size:13px;}
+  .history-head .h-kcal{font-size:13px; color:#1C6FD1; font-weight:700; font-family:"M PLUS Rounded 1c",sans-serif;}
+  .history-head .h-macro{font-size:10.5px; color:var(--muted);}
+  .history-body{
+    padding:8px 14px 12px;
+    border-top:1px dashed #D7E6F7;
+    display:none;
+  }
+  .history-body.open{display:block;}
+  .history-entry{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12px;
+    padding:4px 0;
+    color:var(--ink);
+    gap:6px;
+  }
+  .history-entry span:first-child{flex:1;}
   .log-row .l-kcal{color:var(--muted); font-family:"M PLUS Rounded 1c",sans-serif;}
   .log-actions{
     display:flex;
@@ -611,6 +658,21 @@
         <span class="reset-link" onclick="resetDay()">今日の記録を全てリセット</span>
       </div>
 
+      <div class="card" style="margin-bottom:18px;">
+        <h2>📖 日記（これまでの記録）</h2>
+        <div id="historyList"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h2>📊 推移グラフ</h2>
+        <div style="position:relative; height:180px; margin-bottom:16px;">
+          <canvas id="kcalChart"></canvas>
+        </div>
+        <div style="position:relative; height:180px;">
+          <canvas id="pfcChart"></canvas>
+        </div>
+      </div>
+
       <div class="label-box">
         <div class="label-title">⭐ 栄養成分表示（本日合計）</div>
         <div class="label-kcal-row">
@@ -678,7 +740,32 @@
 </div>
 
 <script>
-let foods = [
+// --- Firebase 初期化（家族で共有するためのクラウド同期） ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCX-xWtXchCQqgXu7r3lxmnJHtNLy2Z8PM",
+  authDomain: "tamoyan-apps.firebaseapp.com",
+  databaseURL: "https://tamoyan-apps-default-rtdb.firebaseio.com",
+  projectId: "tamoyan-apps",
+  storageBucket: "tamoyan-apps.firebasestorage.app",
+  messagingSenderId: "1035313476432",
+  appId: "1:1035313476432:web:5504d3d7bb8ff2a1653255"
+};
+let fbDb = null;
+let fbReady = false;
+let fbApplyingRemote = false; // リモートからの反映中は再送信しないためのフラグ
+try{
+  firebase.initializeApp(firebaseConfig);
+  fbDb = firebase.database();
+  firebase.auth().signInAnonymously().then(() => {
+    fbReady = true;
+    initFirebaseSync();
+  }).catch((e) => {
+    console.warn('Firebase匿名認証に失敗。オフライン(端末内保存のみ)で動作します。', e);
+    fbReady = false;
+  });
+}catch(e){ console.warn('Firebase init failed', e); }
+
+let builtInFoods = [
   {id:1, name:"ご飯(白米)", unit:"80g", kcal:134, p:2.0, f:0.3, c:29.7, fb:0.3, cat:"主食"},
   {id:39, name:"ご飯(玄米)", unit:"80g", kcal:122, p:2.2, f:0.8, c:28.5, fb:1.1, cat:"主食"},
   {id:25, name:"食パン(6枚切り)", unit:"1枚(60g)", kcal:156, p:5.6, f:2.6, c:28.0, fb:1.4, cat:"主食"},
@@ -710,17 +797,17 @@ let foods = [
   {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
   {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
   {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
-  {id:54, name:"ヨーグルトセット", unit:"1セット(バーリーマックス5g+チアシード5g+米ぬかパウダー10g+豆乳ヨーグルト50g)", kcal:104, p:4.7, f:4.9, c:11.7, fb:5.7, cat:"大豆・乳製品"},
+  {id:54, name:"ヨーグルトセット", unit:"1セット(バーリーマックス5g+チアシード5g+米ぬかパウダー10g+豆乳ヨーグルト50g+ホエイプロテイン5g)", kcal:123, p:8.7, f:5.1, c:12.0, fb:5.7, cat:"大豆・乳製品"},
   {id:14, name:"納豆", unit:"1パック(45g)", kcal:85, p:7.4, f:4.5, c:5.4, fb:3.0, cat:"大豆・乳製品"},
   {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"豆類"},
   {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"豆類"},
   {id:43, name:"味噌汁(野菜・海藻)", unit:"1杯(約150ml)", kcal:40, p:2.5, f:1.0, c:5.0, fb:1.0, cat:"汁物"},
-  {id:4, name:"ほうれん草", unit:"40g", kcal:8, p:0.9, f:0.2, c:1.2, fb:1.1, cat:"野菜"},
+  {id:4, name:"ほうれん草(加熱後)", unit:"40g", kcal:7, p:0.8, f:0.1, c:1.1, fb:1.1, cat:"野菜"},
   {id:8, name:"トマト", unit:"1/4個(約38g)", kcal:7, p:0.3, f:0.1, c:1.8, fb:0.4, cat:"野菜"},
   {id:9, name:"プチトマト", unit:"1個(15g)", kcal:5, p:0.2, f:0.0, c:0.9, fb:0.2, cat:"野菜"},
   {id:10, name:"きのこ(しめじ等)", unit:"40g", kcal:8, p:1.1, f:0.1, c:1.9, fb:1.4, cat:"野菜"},
-  {id:11, name:"ブロッコリー", unit:"40g", kcal:13, p:1.7, f:0.2, c:2.1, fb:1.8, cat:"野菜"},
-  {id:12, name:"カリフラワー", unit:"40g", kcal:11, p:1.2, f:0.0, c:2.1, fb:1.2, cat:"野菜"},
+  {id:11, name:"ブロッコリー(加熱後)", unit:"40g", kcal:12, p:1.5, f:0.2, c:2.0, fb:1.8, cat:"野菜"},
+  {id:12, name:"カリフラワー(加熱後)", unit:"40g", kcal:10, p:1.1, f:0.0, c:1.9, fb:1.2, cat:"野菜"},
   {id:42, name:"玉ねぎ", unit:"1/4玉(約50g)", kcal:19, p:0.5, f:0.1, c:4.2, fb:0.8, cat:"野菜"},
   {id:44, name:"パプリカのピクルス(低糖)", unit:"30g", kcal:8, p:0.2, f:0.1, c:1.8, fb:0.5, cat:"野菜"},
   {id:22, name:"リンゴ", unit:"1/2個(約125g)", kcal:68, p:0.3, f:0.1, c:17.8, fb:2.4, cat:"果物"},
@@ -732,8 +819,19 @@ let foods = [
   {id:13, name:"オリーブオイル", unit:"大さじ1(13g)", kcal:125, p:0, f:13.6, c:0, fb:0, cat:"油脂"},
   {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
   {id:41, name:"マヨネーズ", unit:"小さじ1(5g)", kcal:35, p:0.1, f:3.8, c:0.2, fb:0, cat:"油脂"},
+  {id:55, name:"ホエイプロテイン", unit:"5g", kcal:19, p:4.0, f:0.2, c:0.3, fb:0, cat:"大豆・乳製品"},
+  {id:56, name:"インゲン豆(ゆで)", unit:"40g", kcal:53, p:3.5, f:0.1, c:9.2, fb:2.9, cat:"豆類"},
+  {id:57, name:"冷凍ベリーミックス", unit:"25g", kcal:14, p:0.2, f:0.1, c:3.3, fb:1.1, cat:"果物"},
 ];
-let nextId = 55;
+let nextId = 58;
+let customFoods = {}; // Firebaseから同期される追加食品 { pushKey: {name,unit,kcal,p,f,c,fb,cat} }
+let foods = builtInFoods.slice();
+
+function rebuildFoodsList(){
+  const custom = Object.keys(customFoods).map(key => Object.assign({id:key}, customFoods[key]));
+  foods = builtInFoods.concat(custom);
+}
+
 const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","その他"];
 const categoryIcons = {
   "主食":"🍚", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
@@ -749,8 +847,33 @@ let mode = 'normal';
 let meal = [];
 let dailyLog = [];
 let logSeq = 1;
+let history = {}; // { "YYYY-MM-DD": {entries:[...dailyLog snapshot], totals:{kcal,p,f,c,fb}} }
+let expandedHistoryDate = null;
 
-// --- localStorage 永続化 ---
+function todayKey(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateLabel(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const youbi = ['日','月','火','水','木','金','土'][dateObj.getDay()];
+  return `${m}月${d}日(${youbi})`;
+}
+
+function computeLogTotals(entries){
+  let t = {kcal:0, p:0, f:0, c:0, fb:0};
+  entries.forEach(e => {
+    t.kcal += e.kcal; t.p += e.p; t.f += e.f; t.c += e.c; t.fb += (e.fb||0);
+  });
+  return t;
+}
+
+// --- localStorage + Firebase 永続化 ---
 function saveState(){
   try{
     localStorage.setItem('starman_targets', JSON.stringify(targets));
@@ -758,7 +881,23 @@ function saveState(){
     localStorage.setItem('starman_meal', JSON.stringify(meal));
     localStorage.setItem('starman_log', JSON.stringify(dailyLog));
     localStorage.setItem('starman_logSeq', String(logSeq));
+
+    const today = todayKey();
+    if(dailyLog.length > 0){
+      history[today] = {entries: dailyLog, totals: computeLogTotals(dailyLog)};
+    } else {
+      delete history[today];
+    }
+    localStorage.setItem('starman_history', JSON.stringify(history));
+    localStorage.setItem('starman_log_date', today);
   }catch(e){}
+
+  // リモートからの反映中に書き戻すと無限ループになるため、その間はFirebaseへの送信をスキップ
+  if(fbReady && !fbApplyingRemote){
+    fbDb.ref('sharedState').set({
+      targets, mode, meal, dailyLog, logSeq, favoriteIds, history
+    });
+  }
 }
 
 function loadState(){
@@ -773,9 +912,71 @@ function loadState(){
     if(dl) dailyLog = JSON.parse(dl);
     const ls = localStorage.getItem('starman_logSeq');
     if(ls) logSeq = parseInt(ls);
+    const h = localStorage.getItem('starman_history');
+    if(h) history = JSON.parse(h);
+
+    // 日付が変わっていたら、前日分を日記に自動アーカイブして今日分をリセット
+    const storedDate = localStorage.getItem('starman_log_date');
+    const today = todayKey();
+    if(storedDate && storedDate !== today){
+      if(dailyLog.length > 0){
+        history[storedDate] = {entries: dailyLog, totals: computeLogTotals(dailyLog)};
+      }
+      dailyLog = [];
+      meal = [];
+      try{ localStorage.setItem('starman_history', JSON.stringify(history)); }catch(e){}
+    }
+    localStorage.setItem('starman_log_date', today);
   }catch(e){}
 }
 loadState();
+
+// --- Firebaseとのリアルタイム同期セットアップ ---
+function initFirebaseSync(){
+  if(!fbReady) return;
+
+  // 追加された食品（家族の誰かが追加したものも含む）
+  fbDb.ref('customFoods').on('value', (snapshot) => {
+    customFoods = snapshot.val() || {};
+    rebuildFoodsList();
+    renderFoods();
+    renderMeal();
+  });
+
+  // 目標設定・今日の記録・日記・お気に入りなど
+  fbDb.ref('sharedState').on('value', (snapshot) => {
+    const remote = snapshot.val();
+    if(!remote) return; // まだ何も保存されていない（初回）場合はローカル値をそのまま使う
+
+    fbApplyingRemote = true;
+    if(remote.targets) targets = remote.targets;
+    if(remote.mode) mode = remote.mode;
+    meal = remote.meal || [];
+    dailyLog = remote.dailyLog || [];
+    if(remote.logSeq) logSeq = remote.logSeq;
+    favoriteIds = remote.favoriteIds || [];
+    history = remote.history || {};
+
+    try{
+      localStorage.setItem('starman_targets', JSON.stringify(targets));
+      localStorage.setItem('starman_mode', mode);
+      localStorage.setItem('starman_meal', JSON.stringify(meal));
+      localStorage.setItem('starman_log', JSON.stringify(dailyLog));
+      localStorage.setItem('starman_logSeq', String(logSeq));
+      localStorage.setItem('starman_favorites', JSON.stringify(favoriteIds));
+      localStorage.setItem('starman_history', JSON.stringify(history));
+    }catch(e){}
+
+    document.getElementById('modeBtnNormal').classList.toggle('active', mode==='normal');
+    document.getElementById('modeBtnFasting').classList.toggle('active', mode==='fasting');
+    document.getElementById('targetTitle').textContent = '目標設定（' + (mode==='normal' ? '通常モード' : 'プチ断食モード') + '）';
+    renderTargetInputs();
+    renderFoods();
+    renderMeal();
+    renderLog();
+    fbApplyingRemote = false;
+  });
+}
 
 function getStep(){
   return 0.2;
@@ -836,7 +1037,19 @@ function addFood(){
   const c = parseFloat(document.getElementById('newC').value) || 0;
   const fb = parseFloat(document.getElementById('newFb').value) || 0;
   if(!name){ alert('食品名を入力してください'); return; }
-  foods.push({id:nextId++, name, unit, kcal, p, f, c, fb, cat});
+  const foodData = {name, unit, kcal, p, f, c, fb, cat};
+
+  if(fbReady){
+    const newRef = fbDb.ref('customFoods').push();
+    newRef.set(foodData);
+    // customFoodsのリアルタイムリスナーが自動でfoods一覧に反映してくれる
+  } else {
+    // Firebaseが使えない場合はローカルのみで動作を継続
+    customFoods['local_' + (nextId++)] = foodData;
+    rebuildFoodsList();
+    renderFoods();
+  }
+
   document.getElementById('newName').value='';
   document.getElementById('newUnit').value='';
   document.getElementById('newKcal').value='';
@@ -845,14 +1058,22 @@ function addFood(){
   document.getElementById('newC').value='';
   document.getElementById('newFb').value='';
   document.getElementById('addForm').classList.remove('open');
-  renderFoods();
 }
 
 function deleteFood(id){
   const f = foods.find(x => x.id === id);
   const name = f ? f.name : 'この食品';
-  if(!confirm('「' + name + '」を食品ライブラリから削除します。よろしいですか？')) return;
-  foods = foods.filter(f => f.id !== id);
+  if(!customFoods[id]){
+    alert('最初から入っている食品は削除できません。');
+    return;
+  }
+  if(!confirm('「' + name + '」を食品ライブラリから削除します。よろしいですか？（家族全員から見えなくなります）')) return;
+  if(fbReady){
+    fbDb.ref('customFoods/' + id).remove();
+  } else {
+    delete customFoods[id];
+    rebuildFoodsList();
+  }
   meal = meal.filter(m => m.foodId !== id);
   renderFoods();
   renderMeal();
@@ -874,6 +1095,14 @@ function stepQty(foodId, direction){
   if(!item) return;
   const step = getStep();
   item.qty = Math.max(0, Math.round((item.qty + direction*step) * 100) / 100);
+  renderMeal();
+  saveState();
+}
+
+function doubleQty(foodId){
+  const item = meal.find(m => m.foodId === foodId);
+  if(!item) return;
+  item.qty = Math.round(item.qty * 2 * 100) / 100;
   renderMeal();
   saveState();
 }
@@ -900,9 +1129,9 @@ function resetMeal(){
   saveState();
 }
 
-function mealTotals(){
+function totalsFromMealArray(arr){
   let totals = {kcal:0, p:0, f:0, c:0, fb:0};
-  meal.forEach(m => {
+  arr.forEach(m => {
     const f = foods.find(x => x.id === m.foodId);
     if(!f) return;
     totals.kcal += f.kcal * m.qty;
@@ -912,6 +1141,98 @@ function mealTotals(){
     totals.fb += (f.fb||0) * m.qty;
   });
   return totals;
+}
+
+function mealTotals(){
+  return totalsFromMealArray(meal);
+}
+
+// --- 過去の日付への追記 ---
+let historyEditDate = null;
+let historyEditMeal = [];
+let historySearchQuery = '';
+
+function openHistoryAdd(dateStr){
+  if(historyEditDate === dateStr){
+    historyEditDate = null;
+  } else {
+    historyEditDate = dateStr;
+    historyEditMeal = [];
+    historySearchQuery = '';
+    expandedHistoryDate = dateStr;
+  }
+  renderHistory();
+}
+
+function historyAddToMeal(foodId){
+  const existing = historyEditMeal.find(m => m.foodId === foodId);
+  if(existing){ existing.qty += getStep(); } else { historyEditMeal.push({foodId, qty:1}); }
+  renderHistory();
+}
+
+function historyStepQty(foodId, direction){
+  const item = historyEditMeal.find(m => m.foodId === foodId);
+  if(!item) return;
+  const step = getStep();
+  item.qty = Math.max(0, Math.round((item.qty + direction*step)*100)/100);
+  renderHistory();
+}
+
+function historyDoubleQty(foodId){
+  const item = historyEditMeal.find(m => m.foodId === foodId);
+  if(!item) return;
+  item.qty = Math.round(item.qty * 2 * 100) / 100;
+  renderHistory();
+}
+
+function historyUpdateQty(foodId, value){
+  const v = parseFloat(value);
+  const item = historyEditMeal.find(m => m.foodId === foodId);
+  if(item) item.qty = isNaN(v) ? 0 : v;
+  renderHistory();
+}
+
+function historyRemoveFromMeal(foodId){
+  historyEditMeal = historyEditMeal.filter(m => m.foodId !== foodId);
+  renderHistory();
+}
+
+function updateHistorySearch(value){
+  historySearchQuery = value;
+  renderHistory();
+}
+
+function confirmHistoryAdd(dateStr){
+  if(historyEditMeal.length === 0) return;
+  const t = totalsFromMealArray(historyEditMeal);
+  const entries = (history[dateStr] && history[dateStr].entries) ? history[dateStr].entries.slice() : [];
+  entries.push({
+    id: logSeq++,
+    label: '食事' + (entries.length+1),
+    kcal: t.kcal, p:t.p, f:t.f, c:t.c, fb:t.fb
+  });
+  history[dateStr] = {entries, totals: computeLogTotals(entries)};
+  historyEditDate = null;
+  historyEditMeal = [];
+  try{
+    localStorage.setItem('starman_history', JSON.stringify(history));
+    localStorage.setItem('starman_logSeq', String(logSeq));
+  }catch(e){}
+  renderHistory();
+  renderCharts();
+}
+
+function removeHistoryEntry(dateStr, entryId){
+  if(!history[dateStr]) return;
+  const entries = history[dateStr].entries.filter(e => e.id !== entryId);
+  if(entries.length === 0){
+    delete history[dateStr];
+  } else {
+    history[dateStr] = {entries, totals: computeLogTotals(entries)};
+  }
+  try{ localStorage.setItem('starman_history', JSON.stringify(history)); }catch(e){}
+  renderHistory();
+  renderCharts();
 }
 
 function logMeal(){
@@ -960,6 +1281,7 @@ try{
 
 function saveFavorites(){
   try{ localStorage.setItem('starman_favorites', JSON.stringify(favoriteIds)); }catch(e){}
+  saveState();
 }
 
 function toggleFavorite(id){
@@ -1032,6 +1354,7 @@ function renderMeal(){
             <button class="qty-btn" onclick="stepQty(${f.id}, -1)">－</button>
             <input type="number" step="${step}" min="0" value="${m.qty}" onchange="updateQty(${f.id}, this.value)">
             <button class="qty-btn" onclick="stepQty(${f.id}, 1)">＋</button>
+            <button class="qty-btn x2-btn" onclick="doubleQty(${f.id})" title="2倍にする">×2</button>
             <span class="unit">${escapeHtml(f.unit)}</span>
           </div>
           <button class="btn-del" onclick="removeFromMeal(${f.id})" title="削除">×</button>
@@ -1056,6 +1379,219 @@ function renderLog(){
     `).join('');
   }
   calcTotals();
+  renderHistory();
+  renderCharts();
+}
+
+function toggleHistoryDate(dateStr){
+  expandedHistoryDate = (expandedHistoryDate === dateStr) ? null : dateStr;
+  renderHistory();
+}
+
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(!el) return;
+  const today = todayKey();
+  // 今日以外の日付を新しい順に表示（今日は「今日の記録」カードで見れるため）
+  const dates = Object.keys(history).filter(d => d !== today).sort().reverse();
+
+  if(dates.length === 0 && !historyEditDate){
+    el.innerHTML = '<div class="meal-empty">📖 まだ記録がありません<br>食事を記録していくと、ここに日記として残っていきます</div>';
+    return;
+  }
+
+  el.innerHTML = dates.map(dateStr => {
+    const day = history[dateStr] || {entries:[], totals:{kcal:0,p:0,f:0,c:0,fb:0}};
+    const t = day.totals;
+    const isOpen = expandedHistoryDate === dateStr;
+    const entriesHtml = day.entries.map(e => `
+      <div class="history-entry">
+        <span>${escapeHtml(e.label)}</span>
+        <span>${Math.round(e.kcal)}kcal</span>
+        <button class="btn-del subtle" onclick="removeHistoryEntry('${dateStr}', ${e.id})" title="削除">×</button>
+      </div>
+    `).join('');
+    const isEditing = historyEditDate === dateStr;
+    return `
+      <div class="history-item">
+        <div class="history-head" onclick="toggleHistoryDate('${dateStr}')">
+          <div>
+            <div class="h-date">${formatDateLabel(dateStr)}</div>
+            <div class="h-macro">P${t.p.toFixed(0)}g ・ F${t.f.toFixed(0)}g ・ C${t.c.toFixed(0)}g</div>
+          </div>
+          <div class="h-kcal">${Math.round(t.kcal)}kcal</div>
+        </div>
+        <div class="history-body ${isOpen?'open':''}">
+          ${entriesHtml}
+          <button class="btn btn-ghost" style="width:100%; margin-top:8px;" onclick="openHistoryAdd('${dateStr}')">${isEditing ? '閉じる' : '+ この日に追加'}</button>
+          ${isEditing ? historyAddFormHtml(dateStr) : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function historyAddFormHtml(dateStr){
+  const query = historySearchQuery.trim().toLowerCase();
+  const matched = query ? foods.filter(f => f.name.toLowerCase().includes(query)) : [];
+  const step = getStep();
+
+  const pickerHtml = query ? (
+    matched.length > 0
+      ? `<div class="food-grid">${matched.map(f => `
+          <div class="food-row">
+            <div class="fr-top">
+              <div class="food-name">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
+            </div>
+            <div class="food-meta">${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
+            <button class="btn" onclick="historyAddToMeal(${f.id})" style="width:100%;">追加</button>
+          </div>
+        `).join('')}</div>`
+      : '<div class="meal-empty" style="padding:8px 0;">該当する食品がありません</div>'
+  ) : '';
+
+  const selectedHtml = historyEditMeal.length > 0 ? historyEditMeal.map(m => {
+    const f = foods.find(x => x.id === m.foodId);
+    if(!f) return '';
+    return `
+      <div class="meal-row">
+        <div class="name">${escapeHtml(f.name)}</div>
+        <div class="qty-wrap">
+          <button class="qty-btn" onclick="historyStepQty(${f.id}, -1)">－</button>
+          <input type="number" step="${step}" min="0" value="${m.qty}" onchange="historyUpdateQty(${f.id}, this.value)">
+          <button class="qty-btn" onclick="historyStepQty(${f.id}, 1)">＋</button>
+          <button class="qty-btn x2-btn" onclick="historyDoubleQty(${f.id})" title="2倍にする">×2</button>
+          <span class="unit">${escapeHtml(f.unit)}</span>
+        </div>
+        <button class="btn-del subtle" onclick="historyRemoveFromMeal(${f.id})" title="削除">×</button>
+      </div>
+    `;
+  }).join('') : '<div class="meal-empty" style="padding:6px 0;">食品を検索して追加してください</div>';
+
+  return `
+    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #D7E6F7;">
+      <input type="text" placeholder="🔍 食品名で検索" value="${escapeHtml(historySearchQuery)}" oninput="updateHistorySearch(this.value)" style="margin-bottom:8px;">
+      ${pickerHtml}
+      <div style="margin:10px 0;">${selectedHtml}</div>
+      <button class="btn" style="width:100%;" onclick="confirmHistoryAdd('${dateStr}')">この内容を${formatDateLabel(dateStr)}に追加</button>
+    </div>
+  `;
+}
+
+let kcalChartInstance = null;
+let pfcChartInstance = null;
+
+function renderCharts(){
+  if(typeof Chart === 'undefined') return;
+  const kcalCanvas = document.getElementById('kcalChart');
+  const pfcCanvas = document.getElementById('pfcChart');
+  if(!kcalCanvas || !pfcCanvas) return;
+
+  // 今日を含めた日付リスト（古い→新しい、直近14日まで）
+  const today = todayKey();
+  const allDates = Object.keys(history);
+  if(dailyLog.length > 0 || meal.length > 0){
+    // 今日のライブ値も反映
+    if(!allDates.includes(today)) allDates.push(today);
+  }
+  const sorted = allDates.sort();
+  const recent = sorted.slice(-14);
+
+  if(recent.length === 0){
+    if(kcalChartInstance){ kcalChartInstance.destroy(); kcalChartInstance = null; }
+    if(pfcChartInstance){ pfcChartInstance.destroy(); pfcChartInstance = null; }
+    return;
+  }
+
+  const labels = recent.map(d => {
+    const [y,m,day] = d.split('-').map(Number);
+    return `${m}/${day}`;
+  });
+
+  const kcalData = recent.map(d => {
+    if(d === today){
+      return combinedTotals().kcal;
+    }
+    return history[d] ? history[d].totals.kcal : 0;
+  });
+
+  const targetKcalData = recent.map(() => targets[mode].kcal);
+
+  const pfcPctData = recent.map(d => {
+    const t = (d === today) ? combinedTotals() : (history[d] ? history[d].totals : {p:0,f:0,c:0});
+    const pKcal = t.p*4, fKcal = t.f*9, cKcal = t.c*4;
+    const total = pKcal+fKcal+cKcal;
+    if(total === 0) return {p:0,f:0,c:0};
+    return {
+      p: Math.round(pKcal/total*100),
+      f: Math.round(fKcal/total*100),
+      c: Math.round(cKcal/total*100)
+    };
+  });
+
+  if(kcalChartInstance) kcalChartInstance.destroy();
+  kcalChartInstance = new Chart(kcalCanvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'カロリー',
+          data: kcalData,
+          borderColor: '#1C6FD1',
+          backgroundColor: 'rgba(28,111,209,0.15)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#14315C',
+        },
+        {
+          label: '目標',
+          data: targetKcalData,
+          borderColor: '#FFD400',
+          borderDash: [6,4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { family: "'M PLUS Rounded 1c', sans-serif", size: 11 } } },
+        title: { display: true, text: 'カロリー推移', font: { family: "'Kiwi Maru', sans-serif", size: 13 }, color: '#14315C' }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+        x: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  if(pfcChartInstance) pfcChartInstance.destroy();
+  pfcChartInstance = new Chart(pfcCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'P', data: pfcPctData.map(x=>x.p), backgroundColor: '#14315C' },
+        { label: 'F', data: pfcPctData.map(x=>x.f), backgroundColor: '#1C6FD1' },
+        { label: 'C', data: pfcPctData.map(x=>x.c), backgroundColor: '#9FC4EE' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { family: "'M PLUS Rounded 1c', sans-serif", size: 11 } } },
+        title: { display: true, text: 'PFC比率推移(%)', font: { family: "'Kiwi Maru', sans-serif", size: 13 }, color: '#14315C' }
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 10 } } },
+        y: { stacked: true, beginAtZero: true, max: 100, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
 }
 
 function diffColor(diff){
