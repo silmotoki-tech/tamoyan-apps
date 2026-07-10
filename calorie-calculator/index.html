@@ -896,7 +896,7 @@ function saveState(){
   // リモートからの反映中に書き戻すと無限ループになるため、その間はFirebaseへの送信をスキップ
   if(fbReady && !fbApplyingRemote){
     fbDb.ref('sharedState').set({
-      targets, mode, meal, dailyLog, logSeq, favoriteIds, history
+      targets, mode, meal, dailyLog, logSeq, favoriteIds, history, logDate: todayKey()
     });
   }
 }
@@ -952,11 +952,24 @@ function initFirebaseSync(){
     fbApplyingRemote = true;
     if(remote.targets) targets = remote.targets;
     if(remote.mode) mode = remote.mode;
-    meal = remote.meal || [];
-    dailyLog = remote.dailyLog || [];
     if(remote.logSeq) logSeq = remote.logSeq;
     favoriteIds = remote.favoriteIds || [];
     history = remote.history || {};
+
+    const today = todayKey();
+    let needsRolloverWriteBack = false;
+    if(remote.logDate && remote.logDate !== today){
+      // Firebase側のデータがまだ前日のものなら、日記へアーカイブしてリセットする
+      if(remote.dailyLog && remote.dailyLog.length > 0){
+        history[remote.logDate] = {entries: remote.dailyLog, totals: computeLogTotals(remote.dailyLog)};
+      }
+      dailyLog = [];
+      meal = [];
+      needsRolloverWriteBack = true;
+    } else {
+      meal = remote.meal || [];
+      dailyLog = remote.dailyLog || [];
+    }
 
     try{
       localStorage.setItem('starman_targets', JSON.stringify(targets));
@@ -966,6 +979,7 @@ function initFirebaseSync(){
       localStorage.setItem('starman_logSeq', String(logSeq));
       localStorage.setItem('starman_favorites', JSON.stringify(favoriteIds));
       localStorage.setItem('starman_history', JSON.stringify(history));
+      localStorage.setItem('starman_log_date', today);
     }catch(e){}
 
     document.getElementById('modeBtnNormal').classList.toggle('active', mode==='normal');
@@ -976,6 +990,10 @@ function initFirebaseSync(){
     renderMeal();
     renderLog();
     fbApplyingRemote = false;
+
+    if(needsRolloverWriteBack){
+      saveState(); // 日付が変わった後の状態をFirebaseにも書き戻す
+    }
   });
 }
 
