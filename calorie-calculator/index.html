@@ -661,6 +661,10 @@
 
       <div class="card" style="margin-bottom:18px;">
         <h2>📖 日記（これまでの記録）</h2>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="date" id="newHistoryDate" style="flex:1;">
+          <button class="btn" onclick="addHistoryDate()">＋ この日を追加</button>
+        </div>
         <div id="historyList"></div>
       </div>
 
@@ -874,6 +878,25 @@ function computeLogTotals(entries){
   return t;
 }
 
+// 日付が変わる際、記録済み(dailyLog)だけでなく「今回の食事」に残っている未確定分も
+// まとめてその日の日記としてアーカイブする（記録ボタンを押し忘れても消えないようにする）
+function archiveStaleDay(dateStr, staleDailyLog, staleMeal){
+  const combinedEntries = (staleDailyLog || []).slice();
+  if(staleMeal && staleMeal.length > 0){
+    const mealT = totalsFromMealArray(staleMeal);
+    if(mealT.kcal > 0){
+      combinedEntries.push({
+        id: logSeq++,
+        label: '記録(未確定分)',
+        kcal: mealT.kcal, p: mealT.p, f: mealT.f, c: mealT.c, fb: mealT.fb
+      });
+    }
+  }
+  if(combinedEntries.length > 0){
+    history[dateStr] = {entries: combinedEntries, totals: computeLogTotals(combinedEntries)};
+  }
+}
+
 // --- localStorage + Firebase 永続化 ---
 function saveState(){
   try{
@@ -916,16 +939,17 @@ function loadState(){
     const h = localStorage.getItem('starman_history');
     if(h) history = JSON.parse(h);
 
-    // 日付が変わっていたら、前日分を日記に自動アーカイブして今日分をリセット
+    // 日付が変わっていたら、前日分（記録済み＋今回の食事の未確定分）を日記に自動アーカイブして今日分をリセット
     const storedDate = localStorage.getItem('starman_log_date');
     const today = todayKey();
     if(storedDate && storedDate !== today){
-      if(dailyLog.length > 0){
-        history[storedDate] = {entries: dailyLog, totals: computeLogTotals(dailyLog)};
-      }
+      archiveStaleDay(storedDate, dailyLog, meal);
       dailyLog = [];
       meal = [];
-      try{ localStorage.setItem('starman_history', JSON.stringify(history)); }catch(e){}
+      try{
+        localStorage.setItem('starman_history', JSON.stringify(history));
+        localStorage.setItem('starman_logSeq', String(logSeq));
+      }catch(e){}
     }
     localStorage.setItem('starman_log_date', today);
   }catch(e){}
@@ -959,10 +983,8 @@ function initFirebaseSync(){
     const today = todayKey();
     let needsRolloverWriteBack = false;
     if(remote.logDate && remote.logDate !== today){
-      // Firebase側のデータがまだ前日のものなら、日記へアーカイブしてリセットする
-      if(remote.dailyLog && remote.dailyLog.length > 0){
-        history[remote.logDate] = {entries: remote.dailyLog, totals: computeLogTotals(remote.dailyLog)};
-      }
+      // Firebase側のデータがまだ前日のものなら、記録済み分＋未確定分(meal)を日記へアーカイブしてリセットする
+      archiveStaleDay(remote.logDate, remote.dailyLog, remote.meal);
       dailyLog = [];
       meal = [];
       needsRolloverWriteBack = true;
@@ -1173,6 +1195,11 @@ let historySearchQuery = '';
 
 function openHistoryAdd(dateStr){
   if(historyEditDate === dateStr){
+    // 何も追加しないまま閉じた場合、空の項目は残さない
+    if(history[dateStr] && history[dateStr].entries.length === 0){
+      delete history[dateStr];
+      try{ localStorage.setItem('starman_history', JSON.stringify(history)); }catch(e){}
+    }
     historyEditDate = null;
   } else {
     historyEditDate = dateStr;
@@ -1181,6 +1208,23 @@ function openHistoryAdd(dateStr){
     expandedHistoryDate = dateStr;
   }
   renderHistory();
+}
+
+function addHistoryDate(){
+  const input = document.getElementById('newHistoryDate');
+  const dateStr = input.value;
+  if(!dateStr){ alert('日付を選んでください'); return; }
+  const today = todayKey();
+  if(dateStr === today){
+    alert('今日の日付は「今日の記録」から入力してください');
+    return;
+  }
+  if(!history[dateStr]){
+    history[dateStr] = {entries: [], totals: {kcal:0,p:0,f:0,c:0,fb:0}};
+    try{ localStorage.setItem('starman_history', JSON.stringify(history)); }catch(e){}
+  }
+  input.value = '';
+  openHistoryAdd(dateStr);
 }
 
 function historyAddToMeal(foodId){
@@ -1237,6 +1281,11 @@ function confirmHistoryAdd(dateStr){
     localStorage.setItem('starman_history', JSON.stringify(history));
     localStorage.setItem('starman_logSeq', String(logSeq));
   }catch(e){}
+  if(fbReady && !fbApplyingRemote){
+    fbDb.ref('sharedState').set({
+      targets, mode, meal, dailyLog, logSeq, favoriteIds, history, logDate: todayKey()
+    });
+  }
   renderHistory();
   renderCharts();
 }
