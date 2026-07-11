@@ -598,6 +598,7 @@
             <label class="small">カテゴリ</label>
             <select id="newCat">
               <option value="主食">主食</option>
+              <option value="麺類・カレー">麺類・カレー</option>
               <option value="肉類">肉類</option>
               <option value="魚類">魚類</option>
               <option value="卵">卵</option>
@@ -608,6 +609,7 @@
               <option value="果物">果物</option>
               <option value="油脂">油脂</option>
               <option value="お酒">お酒</option>
+              <option value="おやつ">おやつ</option>
               <option value="その他">その他</option>
             </select>
           </div>
@@ -831,8 +833,15 @@ let builtInFoods = [
   {id:58, name:"オクラ", unit:"40g", kcal:12, p:0.8, f:0.1, c:2.6, fb:2.0, cat:"野菜"},
   {id:59, name:"ワイン", unit:"1杯(120ml)", kcal:88, p:0.2, f:0, c:1.8, fb:0, cat:"お酒"},
   {id:60, name:"ビール", unit:"350ml", kcal:140, p:1.1, f:0, c:10.9, fb:0, cat:"お酒"},
+  {id:61, name:"マフィン(大きめ)", unit:"1/2個", kcal:210, p:3.0, f:9.0, c:29.0, fb:0.5, cat:"おやつ"},
+  {id:62, name:"スコーン(スタバサイズ)", unit:"1/2個", kcal:195, p:3.0, f:9.0, c:25.0, fb:0.8, cat:"おやつ"},
+  {id:63, name:"豆大福", unit:"1個", kcal:230, p:4.5, f:0.6, c:50.0, fb:2.0, cat:"おやつ"},
+  {id:64, name:"ラーメン(豚骨・麺普通)", unit:"1杯", kcal:550, p:22.0, f:20.0, c:68.0, fb:2.0, cat:"麺類・カレー"},
+  {id:65, name:"ラーメン(淡麗系・麺普通)", unit:"1杯", kcal:450, p:20.0, f:10.0, c:65.0, fb:2.0, cat:"麺類・カレー"},
+  {id:66, name:"つけめん(大勝軒風・麺少なめ)", unit:"1人前", kcal:550, p:20.0, f:20.0, c:65.0, fb:2.0, cat:"麺類・カレー"},
+  {id:67, name:"カレー(ココイチ風・ご飯少なめ)", unit:"1皿", kcal:560, p:12.0, f:18.0, c:85.0, fb:3.0, cat:"麺類・カレー"},
 ];
-let nextId = 61;
+let nextId = 68;
 let customFoods = {}; // Firebaseから同期される追加食品 { pushKey: {name,unit,kcal,p,f,c,fb,cat} }
 let foods = builtInFoods.slice();
 
@@ -841,10 +850,10 @@ function rebuildFoodsList(){
   foods = builtInFoods.concat(custom);
 }
 
-const categoryOrder = ["主食","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","お酒","その他"];
+const categoryOrder = ["主食","麺類・カレー","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","お酒","おやつ","その他"];
 const categoryIcons = {
-  "主食":"🍚", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
-  "豆類":"🫘", "汁物":"🍵", "野菜":"🥦", "果物":"🍓", "油脂":"🧈", "お酒":"🍷", "その他":"✨"
+  "主食":"🍚", "麺類・カレー":"🍜", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
+  "豆類":"🫘", "汁物":"🍵", "野菜":"🥦", "果物":"🍓", "油脂":"🧈", "お酒":"🍷", "おやつ":"🍰", "その他":"✨"
 };
 
 let targets = {
