@@ -208,11 +208,27 @@
     letter-spacing:0.03em;
     color:#fff;
     background:linear-gradient(135deg,#14315C,#1C6FD1);
-    padding:5px 12px;
+    padding:8px 14px;
     border-radius:999px;
     margin:16px 0 6px;
-    display:inline-block;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
     box-shadow:0 2px 6px rgba(12,35,64,0.25);
+    cursor:pointer;
+    user-select:none;
+  }
+  .cat-header .cat-count{
+    font-weight:500;
+    opacity:0.8;
+    font-size:10.5px;
+  }
+  .cat-header .cat-arrow{
+    font-size:12px;
+    transition:transform .15s ease;
+  }
+  .cat-header .cat-arrow.collapsed{
+    transform:rotate(-90deg);
   }
   .cat-header:first-child{margin-top:0;}
   .food-row:last-child{border-bottom:none;}
@@ -779,6 +795,7 @@ let builtInFoods = [
   {id:25, name:"食パン(6枚切り)", unit:"1枚(60g)", kcal:156, p:5.6, f:2.6, c:28.0, fb:1.4, cat:"主食"},
   {id:26, name:"パスタ(乾麺)", unit:"1食(80g)", kcal:278, p:10.3, f:1.4, c:57.0, fb:2.2, cat:"主食"},
   {id:35, name:"そば(乾麺)", unit:"100g", kcal:344, p:14.0, f:2.3, c:63.0, fb:3.7, cat:"主食"},
+  {id:76, name:"うどん", unit:"1人前(ゆで250g)", kcal:263, p:6.5, f:1.0, c:55.0, fb:2.0, cat:"主食"},
   {id:45, name:"かぼちゃ", unit:"25g", kcal:12, p:0.3, f:0.0, c:2.7, fb:0.9, cat:"主食"},
   {id:46, name:"さつまいも", unit:"25g", kcal:33, p:0.3, f:0.1, c:7.5, fb:0.6, cat:"主食"},
   {id:53, name:"じゃがいも", unit:"100g", kcal:76, p:1.6, f:0.1, c:17.6, fb:1.3, cat:"主食"},
@@ -802,6 +819,8 @@ let builtInFoods = [
   {id:50, name:"カツオ", unit:"100g", kcal:108, p:25.8, f:0.5, c:0.1, fb:0, cat:"魚類"},
   {id:51, name:"カンパチ", unit:"100g", kcal:119, p:21.0, f:3.8, c:0.1, fb:0, cat:"魚類"},
   {id:52, name:"サーモン", unit:"100g", kcal:204, p:20.1, f:12.8, c:0.1, fb:0, cat:"魚類"},
+  {id:73, name:"エビ", unit:"100g", kcal:82, p:18.4, f:0.6, c:0.3, fb:0, cat:"魚類"},
+  {id:74, name:"ツナ缶(水煮)", unit:"100g", kcal:71, p:16.0, f:0.7, c:0.2, fb:0, cat:"魚類"},
   {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
   {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
   {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
@@ -831,6 +850,7 @@ let builtInFoods = [
   {id:55, name:"ホエイプロテイン", unit:"5g", kcal:19, p:4.0, f:0.2, c:0.3, fb:0, cat:"大豆・乳製品"},
   {id:56, name:"インゲン豆(ゆで)", unit:"40g", kcal:53, p:3.5, f:0.1, c:9.2, fb:2.9, cat:"豆類"},
   {id:69, name:"うずら豆(蒸し)", unit:"40g", kcal:58, p:3.4, f:0.2, c:10.4, fb:2.5, cat:"豆類"},
+  {id:75, name:"枝豆", unit:"茶碗1杯(正味50g)", kcal:67, p:5.9, f:3.0, c:4.3, fb:2.5, cat:"豆類"},
   {id:57, name:"冷凍ベリーミックス", unit:"25g", kcal:14, p:0.2, f:0.1, c:3.3, fb:1.1, cat:"果物"},
   {id:58, name:"オクラ", unit:"40g", kcal:12, p:0.8, f:0.1, c:2.6, fb:2.0, cat:"野菜"},
   {id:59, name:"ワイン", unit:"1杯(120ml)", kcal:88, p:0.2, f:0, c:1.8, fb:0, cat:"お酒"},
@@ -838,13 +858,16 @@ let builtInFoods = [
   {id:61, name:"マフィン(大きめ)", unit:"1/2個", kcal:210, p:3.0, f:9.0, c:29.0, fb:0.5, cat:"おやつ"},
   {id:62, name:"スコーン(スタバサイズ)", unit:"1/2個", kcal:195, p:3.0, f:9.0, c:25.0, fb:0.8, cat:"おやつ"},
   {id:63, name:"豆大福", unit:"1個", kcal:230, p:4.5, f:0.6, c:50.0, fb:2.0, cat:"おやつ"},
+  {id:71, name:"ソフトクリーム", unit:"1個", kcal:180, p:3.5, f:8.0, c:23.0, fb:0, cat:"おやつ"},
   {id:64, name:"ラーメン(豚骨・麺普通)", unit:"1杯", kcal:550, p:22.0, f:20.0, c:68.0, fb:2.0, cat:"麺類・カレー"},
   {id:65, name:"ラーメン(淡麗系・麺普通)", unit:"1杯", kcal:450, p:20.0, f:10.0, c:65.0, fb:2.0, cat:"麺類・カレー"},
   {id:66, name:"つけめん(大勝軒風・麺少なめ)", unit:"1人前", kcal:550, p:20.0, f:20.0, c:65.0, fb:2.0, cat:"麺類・カレー"},
   {id:67, name:"カレー(ココイチ風・ご飯少なめ)", unit:"1皿", kcal:560, p:12.0, f:18.0, c:85.0, fb:3.0, cat:"麺類・カレー"},
   {id:70, name:"餃子", unit:"5個", kcal:220, p:8.0, f:12.0, c:18.0, fb:1.5, cat:"麺類・カレー"},
+  {id:77, name:"肉まん", unit:"1個", kcal:240, p:8.0, f:5.0, c:40.0, fb:2.0, cat:"麺類・カレー"},
+  {id:78, name:"しゅうまい", unit:"5個", kcal:200, p:9.0, f:10.0, c:16.0, fb:1.0, cat:"麺類・カレー"},
 ];
-let nextId = 71;
+let nextId = 79;
 let customFoods = {}; // Firebaseから同期される追加食品 { pushKey: {name,unit,kcal,p,f,c,fb,cat} }
 let foods = builtInFoods.slice();
 
@@ -1389,6 +1412,18 @@ function foodRowHtml(f){
     `;
 }
 
+let collapsedCategories = {};
+try{
+  const cc = localStorage.getItem('starman_collapsed_cats');
+  if(cc) collapsedCategories = JSON.parse(cc);
+}catch(e){}
+
+function toggleCategory(cat){
+  collapsedCategories[cat] = !collapsedCategories[cat];
+  try{ localStorage.setItem('starman_collapsed_cats', JSON.stringify(collapsedCategories)); }catch(e){}
+  renderFoods();
+}
+
 function renderFoods(){
   const el = document.getElementById('foodList');
   if(foods.length === 0){
@@ -1416,8 +1451,14 @@ function renderFoods(){
   categoryOrder.forEach(cat => {
     const items = foods.filter(f => f.cat === cat && !favoriteIds.includes(f.id));
     if(items.length === 0) return;
-    html += `<div class="cat-header">${categoryIcons[cat]||'🍴'} ${escapeHtml(cat)}</div>`;
-    html += `<div class="food-grid">${items.map(foodRowHtml).join('')}</div>`;
+    const isCollapsed = !!collapsedCategories[cat];
+    html += `<div class="cat-header" onclick="toggleCategory('${cat}')">
+      <span>${categoryIcons[cat]||'🍴'} ${escapeHtml(cat)} <span class="cat-count">(${items.length})</span></span>
+      <span class="cat-arrow ${isCollapsed?'collapsed':''}">▾</span>
+    </div>`;
+    if(!isCollapsed){
+      html += `<div class="food-grid">${items.map(foodRowHtml).join('')}</div>`;
+    }
   });
   el.innerHTML = html;
 }
