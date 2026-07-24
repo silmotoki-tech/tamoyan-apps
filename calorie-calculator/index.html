@@ -870,6 +870,8 @@ let builtInFoods = [
   {id:11, name:"ブロッコリー(加熱後)", unit:"40g", kcal:12, p:1.5, f:0.2, c:2.0, fb:1.8, cat:"野菜"},
   {id:12, name:"カリフラワー(加熱後)", unit:"40g", kcal:10, p:1.1, f:0.0, c:1.9, fb:1.2, cat:"野菜"},
   {id:42, name:"玉ねぎ", unit:"1/4玉(約50g)", kcal:19, p:0.5, f:0.1, c:4.2, fb:0.8, cat:"野菜"},
+  {id:79, name:"大根", unit:"100g", kcal:15, p:0.4, f:0.1, c:3.4, fb:1.3, cat:"野菜"},
+  {id:80, name:"きゅうり", unit:"40g", kcal:6, p:0.4, f:0.0, c:1.2, fb:0.4, cat:"野菜"},
   {id:68, name:"インゲン", unit:"40g", kcal:9, p:0.7, f:0.0, c:2.1, fb:1.0, cat:"野菜"},
   {id:44, name:"パプリカのピクルス(低糖)", unit:"30g", kcal:8, p:0.2, f:0.1, c:1.8, fb:0.5, cat:"野菜"},
   {id:22, name:"リンゴ", unit:"1/2個(約125g)", kcal:68, p:0.3, f:0.1, c:17.8, fb:2.4, cat:"果物"},
@@ -901,7 +903,7 @@ let builtInFoods = [
   {id:77, name:"肉まん", unit:"1個", kcal:240, p:8.0, f:5.0, c:40.0, fb:2.0, cat:"麺類・カレー"},
   {id:78, name:"しゅうまい", unit:"5個", kcal:200, p:9.0, f:10.0, c:16.0, fb:1.0, cat:"麺類・カレー"},
 ];
-let nextId = 79;
+let nextId = 81;
 let customFoods = {}; // Firebaseから同期される追加食品 { pushKey: {name,unit,kcal,p,f,c,fb,cat} }
 let foods = builtInFoods.slice();
 
