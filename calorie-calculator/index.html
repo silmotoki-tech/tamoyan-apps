@@ -159,32 +159,67 @@
   }
   .pct-sum-note.bad{color:var(--bad); font-weight:700;}
 
-  .food-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-bottom:4px;
+  .food-list{
+    display:flex;
+    flex-direction:column;
   }
   .food-row{
     display:flex;
-    flex-direction:column;
-    padding:10px;
-    border:1px solid #D7E6F7;
-    border-radius:14px;
+    align-items:center;
+    gap:8px;
+    padding:8px 2px 4px;
+    border-bottom:1px solid #EDF3FB;
     font-size:13px;
-    gap:6px;
-    background:#fff;
   }
-  .food-row .fr-top{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:4px;
+  .food-row:last-child{border-bottom:none;}
+  .food-row .flr-pfc{
+    font-size:10px;
+    color:#5C7290;
+    font-weight:600;
+    font-family:"M PLUS Rounded 1c",sans-serif;
+    white-space:nowrap;
+    margin-top:1px;
   }
   .food-row .fav-btn{
     padding:0;
-    min-width:20px;
+    min-width:22px;
     font-size:17px;
+  }
+  .food-row .flr-name{
+    flex:1;
+    min-width:0;
+  }
+  .food-row .flr-name .flr-title{
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .food-row .flr-kcal{
+    flex-shrink:0;
+    font-size:12px;
+    font-weight:700;
+    color:#1C6FD1;
+    font-family:"M PLUS Rounded 1c",sans-serif;
+    white-space:nowrap;
+  }
+  .food-row .flr-add{
+    flex-shrink:0;
+    width:30px;
+    height:30px;
+    min-width:30px;
+    border:none;
+    border-radius:999px;
+    background:linear-gradient(135deg,#FFD400,#FFE45C);
+    color:#14315C;
+    font-weight:800;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    padding:0;
+    box-shadow:0 2px 6px rgba(255,212,0,0.35);
   }
   .fav-btn{
     background:none;
@@ -231,7 +266,6 @@
     transform:rotate(-90deg);
   }
   .cat-header:first-child{margin-top:0;}
-  .food-row:last-child{border-bottom:none;}
   .food-name{font-weight:700;}
   .food-unit-inline{font-weight:400; font-size:11px; color:var(--muted);}
   .food-meta{color:var(--muted); font-size:12px;}
@@ -595,6 +629,7 @@
     <!-- 食品ライブラリ -->
     <div class="card">
       <h2>🍽️ 食品ライブラリ <button class="btn btn-ghost" onclick="toggleAddForm()">+ 食品を追加</button></h2>
+      <button class="btn btn-ghost" style="margin-bottom:10px;" onclick="collapseAllCategories()">▾ すべて折りたたむ</button>
       <input id="foodSearch" type="text" placeholder="🔍 食品名で検索" oninput="renderFoods()" style="margin-bottom:12px;">
       <div id="foodList"></div>
 
@@ -619,7 +654,6 @@
               <option value="魚類">魚類</option>
               <option value="卵">卵</option>
               <option value="大豆・乳製品">大豆・乳製品</option>
-              <option value="豆類">豆類</option>
               <option value="汁物">汁物</option>
               <option value="野菜">野菜</option>
               <option value="果物">果物</option>
@@ -824,10 +858,10 @@ let builtInFoods = [
   {id:5, name:"大豆(蒸し・水煮)", unit:"大さじ2(約40g)", kcal:54, p:5.2, f:2.7, c:3.4, fb:2.7, cat:"大豆・乳製品"},
   {id:6, name:"スゴイダイズ(無調整)", unit:"1パック(200ml)", kcal:103, p:8.4, f:6.0, c:6.0, fb:4.4, cat:"大豆・乳製品"},
   {id:7, name:"豆乳ヨーグルト(スゴイダイズ使用)", unit:"1カップ(100g)", kcal:52, p:4.2, f:3.0, c:3.0, fb:2.2, cat:"大豆・乳製品"},
-  {id:54, name:"ヨーグルトセット", unit:"1セット(バーリーマックス5g+チアシード5g+米ぬかパウダー10g+豆乳ヨーグルト50g+ホエイプロテイン5g)", kcal:123, p:8.7, f:5.1, c:12.0, fb:5.7, cat:"大豆・乳製品"},
+  {id:54, name:"ヨーグルトセット", unit:"1セット(約80g)", kcal:123, p:8.7, f:5.1, c:12.0, fb:5.7, cat:"大豆・乳製品"},
   {id:14, name:"納豆", unit:"1パック(45g)", kcal:85, p:7.4, f:4.5, c:5.4, fb:3.0, cat:"大豆・乳製品"},
-  {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"豆類"},
-  {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"豆類"},
+  {id:36, name:"レンズ豆(ゆで)", unit:"大さじ2(約40g)", kcal:42, p:3.5, f:0.3, c:6.4, fb:3.8, cat:"大豆・乳製品"},
+  {id:37, name:"ひよこ豆(蒸し)", unit:"大さじ2(約40g)", kcal:60, p:3.8, f:1.0, c:11.0, fb:4.6, cat:"大豆・乳製品"},
   {id:43, name:"味噌汁(野菜・海藻)", unit:"1杯(約150ml)", kcal:40, p:2.5, f:1.0, c:5.0, fb:1.0, cat:"汁物"},
   {id:4, name:"ほうれん草(加熱後)", unit:"40g", kcal:7, p:0.8, f:0.1, c:1.1, fb:1.1, cat:"野菜"},
   {id:8, name:"トマト", unit:"1/4個(約38g)", kcal:7, p:0.3, f:0.1, c:1.8, fb:0.4, cat:"野菜"},
@@ -848,9 +882,9 @@ let builtInFoods = [
   {id:31, name:"あまに油", unit:"大さじ1(13g)", kcal:120, p:0, f:13.0, c:0, fb:0, cat:"油脂"},
   {id:41, name:"マヨネーズ", unit:"小さじ1(5g)", kcal:35, p:0.1, f:3.8, c:0.2, fb:0, cat:"油脂"},
   {id:55, name:"ホエイプロテイン", unit:"5g", kcal:19, p:4.0, f:0.2, c:0.3, fb:0, cat:"大豆・乳製品"},
-  {id:56, name:"インゲン豆(ゆで)", unit:"40g", kcal:53, p:3.5, f:0.1, c:9.2, fb:2.9, cat:"豆類"},
-  {id:69, name:"うずら豆(蒸し)", unit:"40g", kcal:58, p:3.4, f:0.2, c:10.4, fb:2.5, cat:"豆類"},
-  {id:75, name:"枝豆", unit:"茶碗1杯(正味50g)", kcal:67, p:5.9, f:3.0, c:4.3, fb:2.5, cat:"豆類"},
+  {id:56, name:"インゲン豆(ゆで)", unit:"40g", kcal:53, p:3.5, f:0.1, c:9.2, fb:2.9, cat:"大豆・乳製品"},
+  {id:69, name:"うずら豆(蒸し)", unit:"40g", kcal:58, p:3.4, f:0.2, c:10.4, fb:2.5, cat:"大豆・乳製品"},
+  {id:75, name:"枝豆", unit:"茶碗1杯(正味50g)", kcal:67, p:5.9, f:3.0, c:4.3, fb:2.5, cat:"大豆・乳製品"},
   {id:57, name:"冷凍ベリーミックス", unit:"25g", kcal:14, p:0.2, f:0.1, c:3.3, fb:1.1, cat:"果物"},
   {id:58, name:"オクラ", unit:"40g", kcal:12, p:0.8, f:0.1, c:2.6, fb:2.0, cat:"野菜"},
   {id:59, name:"ワイン", unit:"1杯(120ml)", kcal:88, p:0.2, f:0, c:1.8, fb:0, cat:"お酒"},
@@ -876,10 +910,10 @@ function rebuildFoodsList(){
   foods = builtInFoods.concat(custom);
 }
 
-const categoryOrder = ["主食","麺類・カレー","肉類","魚類","卵","大豆・乳製品","豆類","汁物","野菜","果物","油脂","お酒","おやつ","その他"];
+const categoryOrder = ["主食","麺類・カレー","肉類","魚類","卵","大豆・乳製品","汁物","野菜","果物","油脂","お酒","おやつ","その他"];
 const categoryIcons = {
   "主食":"🍚", "麺類・カレー":"🍜", "肉類":"🍗", "魚類":"🐟", "卵":"🥚", "大豆・乳製品":"🌱",
-  "豆類":"🫘", "汁物":"🍵", "野菜":"🥦", "果物":"🍓", "油脂":"🧈", "お酒":"🍷", "おやつ":"🍰", "その他":"✨"
+  "汁物":"🍵", "野菜":"🥦", "果物":"🍓", "油脂":"🧈", "お酒":"🍷", "おやつ":"🍰", "その他":"✨"
 };
 
 let targets = {
@@ -1402,12 +1436,13 @@ function foodRowHtml(f){
   const isFav = favoriteIds.includes(f.id);
   return `
       <div class="food-row">
-        <div class="fr-top">
-          <div class="food-name">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
-          <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite(${f.id})" title="お気に入り">${isFav?'★':'☆'}</button>
+        <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite(${f.id})" title="お気に入り">${isFav?'★':'☆'}</button>
+        <div class="flr-name">
+          <div class="flr-title">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
+          <div class="flr-pfc">P${f.p} F${f.f} C${f.c}</div>
         </div>
-        <div class="food-meta">${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
-        <button class="btn" onclick="addToMeal(${f.id})" style="width:100%;">追加</button>
+        <div class="flr-kcal">${f.kcal}kcal</div>
+        <button class="flr-add" onclick="addToMeal(${f.id})" title="追加">＋</button>
       </div>
     `;
 }
@@ -1415,11 +1450,23 @@ function foodRowHtml(f){
 let collapsedCategories = {};
 try{
   const cc = localStorage.getItem('starman_collapsed_cats');
-  if(cc) collapsedCategories = JSON.parse(cc);
+  if(cc){
+    collapsedCategories = JSON.parse(cc);
+  } else {
+    // 初回起動時は、見やすさのため全カテゴリをデフォルトで折りたたんでおく
+    categoryOrder.forEach(cat => { collapsedCategories[cat] = true; });
+    localStorage.setItem('starman_collapsed_cats', JSON.stringify(collapsedCategories));
+  }
 }catch(e){}
 
 function toggleCategory(cat){
   collapsedCategories[cat] = !collapsedCategories[cat];
+  try{ localStorage.setItem('starman_collapsed_cats', JSON.stringify(collapsedCategories)); }catch(e){}
+  renderFoods();
+}
+
+function collapseAllCategories(){
+  categoryOrder.forEach(cat => { collapsedCategories[cat] = true; });
   try{ localStorage.setItem('starman_collapsed_cats', JSON.stringify(collapsedCategories)); }catch(e){}
   renderFoods();
 }
@@ -1438,15 +1485,18 @@ function renderFoods(){
       el.innerHTML = '<div class="meal-empty">🔍 該当する食品が見つかりません</div>';
       return;
     }
-    el.innerHTML = `<div class="food-grid">${matched.map(foodRowHtml).join('')}</div>`;
+    el.innerHTML = `<div class="food-list">${matched.map(foodRowHtml).join('')}</div>`;
     return;
   }
 
   let html = '';
-  const favItems = foods.filter(f => favoriteIds.includes(f.id));
+  let favItems = [];
+  categoryOrder.forEach(cat => {
+    favItems = favItems.concat(foods.filter(f => f.cat === cat && favoriteIds.includes(f.id)));
+  });
   if(favItems.length > 0){
     html += `<div class="cat-header fav-header">⭐ お気に入り</div>`;
-    html += `<div class="food-grid">${favItems.map(foodRowHtml).join('')}</div>`;
+    html += `<div class="food-list">${favItems.map(foodRowHtml).join('')}</div>`;
   }
   categoryOrder.forEach(cat => {
     const items = foods.filter(f => f.cat === cat && !favoriteIds.includes(f.id));
@@ -1457,7 +1507,7 @@ function renderFoods(){
       <span class="cat-arrow ${isCollapsed?'collapsed':''}">▾</span>
     </div>`;
     if(!isCollapsed){
-      html += `<div class="food-grid">${items.map(foodRowHtml).join('')}</div>`;
+      html += `<div class="food-list">${items.map(foodRowHtml).join('')}</div>`;
     }
   });
   el.innerHTML = html;
@@ -1563,13 +1613,14 @@ function historyAddFormHtml(dateStr){
 
   const pickerHtml = query ? (
     matched.length > 0
-      ? `<div class="food-grid">${matched.map(f => `
+      ? `<div class="food-list">${matched.map(f => `
           <div class="food-row">
-            <div class="fr-top">
-              <div class="food-name">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
+            <div class="flr-name">
+              <div class="flr-title">${escapeHtml(f.name)} <span class="food-unit-inline">(${escapeHtml(f.unit)})</span></div>
+              <div class="flr-pfc">P${f.p} F${f.f} C${f.c}</div>
             </div>
-            <div class="food-meta">${f.kcal}kcal ・ P${f.p} F${f.f} C${f.c}</div>
-            <button class="btn" onclick="historyAddToMeal(${f.id})" style="width:100%;">追加</button>
+            <div class="flr-kcal">${f.kcal}kcal</div>
+            <button class="flr-add" onclick="historyAddToMeal(${f.id})" title="追加">＋</button>
           </div>
         `).join('')}</div>`
       : '<div class="meal-empty" style="padding:8px 0;">該当する食品がありません</div>'
